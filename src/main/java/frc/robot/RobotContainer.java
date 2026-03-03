@@ -37,6 +37,7 @@ import frc.robot.commands.LEDDefaultCommand;
 import frc.robot.commands.MegaTrackIterativeCommand;
 import frc.robot.commands.SmashBumpCommand;
 import frc.robot.commands.SmashTrenchCommand;
+import frc.robot.commands.TestShootCommand;
 import frc.robot.generated.TunerConstants;
 import frc.robot.subsystems.drive.Drive;
 import frc.robot.subsystems.drive.GyroIO;
@@ -87,6 +88,8 @@ public class RobotContainer {
   private LoggedTunableNumber testFeederVel = new LoggedTunableNumber("TestShoot/FeederVelRPS", 20);
   private LoggedTunableNumber testIndexerVolts =
       new LoggedTunableNumber("TestShoot/IndexerVolts", 3.0);
+  private LoggedTunableNumber testUseInterpolation =
+      new LoggedTunableNumber("TestShoot/UseInterpolation", 0.0);
 
   @SuppressWarnings("unused")
   public final Shooter shooter;
@@ -255,10 +258,10 @@ public class RobotContainer {
     // // Switch to X pattern when X button is pressed
     // controller.x().onTrue(Commands.runOnce(drive::stopWithX, drive));
     controller
-        .x()
+        .leftBumper()
         .onTrue(new InstantCommand(() -> intake.setWantedState(Intake.WantedState.DOWN_INTAKE)));
     controller
-        .x()
+        .leftBumper()
         .onFalse(new InstantCommand(() -> intake.setWantedState(Intake.WantedState.UP_STOW_STOP)));
     controller
         .povDown()
@@ -299,31 +302,33 @@ public class RobotContainer {
     //                 drive)
     //             .ignoringDisable(true));
 
-    controller.y().whileTrue(new MegaTrackIterativeCommand(this, false));
+    controller.leftTrigger().whileTrue(new MegaTrackIterativeCommand(this, false));
     controller.b().whileTrue(new MegaTrackIterativeCommand(this, true));
     controller
         .a()
         .onTrue(new InstantCommand(() -> intake.setWantedState(Intake.WantedState.UP_DEBUG)));
+    // POV Left: 触发 Intake Deploy 归零流程
+    controller
+        .povLeft()
+        .onTrue(new InstantCommand(() -> intake.setWantedState(Intake.WantedState.HOMING)));
     // controller
     //     .a()
     //     .whileTrue(
     //         new MegaTrackIterativeCommand(this, true));
 
-    // Hold Y to spin up shooter + aim hood, and press right trigger to run feeder
-    // controller
-    //     .a()
-    //     .whileTrue(
-    //         Commands.defer(
-    //             () -> {
-    //               return new TestShootCommand(
-    //                   this,
-    //                   () -> testShooterVel.get(),
-    //                   () -> testHoodAngle.get(),
-    //                   testFeederVel.get(),
-    //                   testIndexerVolts.get(),
-    //                   0.25);
-    //             },
-    //             Set.of(shooter, hood, feeder, indexer)));
+    // Y: TestShootCommand — all params NT4 tunable, right trigger to feed
+    // Dashboard "TestShoot/UseInterpolation": 0 = direct mode, nonzero = interpolation mode
+    controller
+        .y()
+        .whileTrue(
+            new TestShootCommand(
+                this,
+                () -> testUseInterpolation.get(),
+                () -> testShooterVel.get(),
+                () -> testHoodAngle.get(),
+                () -> testFeederVel.get(),
+                () -> testIndexerVolts.get(),
+                0.25));
   }
 
   /**

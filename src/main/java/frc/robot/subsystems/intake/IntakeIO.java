@@ -28,5 +28,11 @@ public interface IntakeIO {
   /** Set deploy/arm position target (mechanism rotations). */
   public default void setDeployPositionRot(double rotations) {}
 
+  /** Open-loop voltage drive for deploy motor (used during homing). */
+  public default void setDeployVoltage(double volts) {}
+
+  /** Reset deploy motor position to the given value (mechanism rotations). */
+  public default void resetDeployPosition(double rotations) {}
+
   public default void stop() {}
 }

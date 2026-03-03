@@ -41,7 +41,7 @@ import edu.wpi.first.units.measure.Angle;
 import edu.wpi.first.units.measure.AngularVelocity;
 import edu.wpi.first.units.measure.Current;
 import edu.wpi.first.units.measure.Voltage;
-import frc.robot.Constants;
+import frc.robot.constants.DrivetrainConstants;
 import frc.robot.generated.TunerConstants;
 import java.util.Queue;
 
@@ -125,7 +125,7 @@ public class ModuleIOTalonFX implements ModuleIO {
     // including VelocityTorqueCurrentFOC / PositionTorqueCurrentFOC closed-loop output).
     // Units: amps
     driveConfig.TorqueCurrent.TorqueNeutralDeadband =
-        Constants.DrivetrainConstants.TORQUE_CURRENT_DEADBAND_AMPS;
+        DrivetrainConstants.TORQUE_CURRENT_DEADBAND_AMPS;
     driveConfig.MotorOutput.Inverted =
         constants.DriveMotorInverted
             ? InvertedValue.Clockwise_Positive

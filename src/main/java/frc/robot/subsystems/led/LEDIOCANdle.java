@@ -7,11 +7,11 @@ import com.ctre.phoenix6.signals.RGBWColor;
 
 /** LEDIO implementation using CTRE CANdle. */
 public class LEDIOCANdle implements LEDIO {
-  private final CANdle candle = new CANdle(frc.robot.Constants.LEDConstants.CANDLE_ID);
+  private final CANdle candle = new CANdle(frc.robot.constants.LEDConstants.CANDLE_ID);
   private final SolidColor solid =
       new SolidColor(
-          frc.robot.Constants.LEDConstants.LED_START_INDEX,
-          frc.robot.Constants.LEDConstants.LED_END_INDEX);
+          frc.robot.constants.LEDConstants.LED_START_INDEX,
+          frc.robot.constants.LEDConstants.LED_END_INDEX);
 
   @Override
   public void setRGB(int r, int g, int b) {

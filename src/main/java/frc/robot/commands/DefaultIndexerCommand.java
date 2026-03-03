@@ -2,7 +2,7 @@
 package frc.robot.commands;
 
 import edu.wpi.first.wpilibj2.command.Command;
-import frc.robot.Constants;
+import frc.robot.constants.IndexerConstants;
 import frc.robot.subsystems.indexer.Indexer;
 
 /** Default command for indexer: slowly reverse when idle. */
@@ -16,7 +16,7 @@ public class DefaultIndexerCommand extends Command {
 
   @Override
   public void execute() {
-    indexer.setVoltage(Constants.IndexerConstants.DEFAULT_REVERSE_VOLTS);
+    indexer.setVoltage(IndexerConstants.DEFAULT_REVERSE_VOLTS);
   }
 
   @Override

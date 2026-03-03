@@ -5,7 +5,7 @@ import com.ctre.phoenix6.BaseStatusSignal;
 import com.ctre.phoenix6.StatusSignal;
 import com.ctre.phoenix6.hardware.CANrange;
 import edu.wpi.first.units.measure.Distance;
-import frc.robot.Constants.HopperConstants;
+import frc.robot.constants.HopperConstants;
 
 /** HopperIO implementation using two CTRE CANrange sensors. */
 public class HopperIOCANrange implements HopperIO {
