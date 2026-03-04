@@ -1,72 +1,43 @@
-// Copyright 2021-2025 FRC 6328
+// Copyright (c) 2021-2026 Littleton Robotics
 // http://github.com/Mechanical-Advantage
 //
-// This program is free software; you can redistribute it and/or
-// modify it under the terms of the GNU General Public License
-// version 3 as published by the Free Software Foundation or
-// available in the root directory of this project.
-//
-// This program is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-// GNU General Public License for more details.
+// Use of this source code is governed by a BSD
+// license that can be found in the LICENSE file
+// at the root directory of this project.
 
 package frc.robot;
 
 import com.pathplanner.lib.auto.AutoBuilder;
+import com.pathplanner.lib.auto.NamedCommands;
+import com.pathplanner.lib.commands.PathPlannerAuto;
+import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
-import edu.wpi.first.wpilibj.DriverStation;
-import edu.wpi.first.wpilibj.DriverStation.Alliance;
 import edu.wpi.first.wpilibj.GenericHID;
 import edu.wpi.first.wpilibj.XboxController;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
+import edu.wpi.first.wpilibj2.command.WaitCommand;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
-import frc.robot.Constants.FieldConstants;
-import frc.robot.commands.Auto.Down;
-import frc.robot.commands.Auto.DownMagic;
-import frc.robot.commands.Auto.UpOut;
-import frc.robot.commands.DefaultFeederCommand;
-import frc.robot.commands.DefaultIndexerCommand;
+import frc.robot.commands.Aimbot;
+import frc.robot.commands.AutonTrench;
 import frc.robot.commands.DriveCommands;
-import frc.robot.commands.LEDDefaultCommand;
-import frc.robot.commands.MegaTrackIterativeCommand;
-import frc.robot.commands.SmashBumpCommand;
-import frc.robot.commands.SmashTrenchCommand;
-import frc.robot.commands.TestShootCommand;
+import frc.robot.commands.IntakeSwing;
+import frc.robot.commands.PivotInit;
 import frc.robot.generated.TunerConstants;
+import frc.robot.subsystems.FeederSubsystem.FeederSubsystem;
+import frc.robot.subsystems.IntakeSubsystem.IntakeSubsystem;
+import frc.robot.subsystems.ShooterSubsystem.ShooterSubsystem;
 import frc.robot.subsystems.drive.Drive;
 import frc.robot.subsystems.drive.GyroIO;
 import frc.robot.subsystems.drive.GyroIOPigeon2;
 import frc.robot.subsystems.drive.ModuleIO;
 import frc.robot.subsystems.drive.ModuleIOSim;
 import frc.robot.subsystems.drive.ModuleIOTalonFX;
-import frc.robot.subsystems.feeder.Feeder;
-import frc.robot.subsystems.feeder.FeederIO;
-import frc.robot.subsystems.feeder.FeederIOTalonFX;
-import frc.robot.subsystems.hood.Hood;
-import frc.robot.subsystems.hood.HoodIO;
-import frc.robot.subsystems.hood.HoodIOTalonFX;
-import frc.robot.subsystems.hopper.Hopper;
-import frc.robot.subsystems.hopper.HopperIO;
-import frc.robot.subsystems.indexer.Indexer;
-import frc.robot.subsystems.indexer.IndexerIO;
-import frc.robot.subsystems.indexer.IndexerIOTalonFX;
-import frc.robot.subsystems.intake.Intake;
-import frc.robot.subsystems.intake.IntakeIO;
-import frc.robot.subsystems.intake.IntakeIOTalonFX;
-import frc.robot.subsystems.led.LED;
-import frc.robot.subsystems.led.LEDIO;
-import frc.robot.subsystems.shooter.Shooter;
-import frc.robot.subsystems.shooter.ShooterIO;
-import frc.robot.subsystems.shooter.ShooterIOTalonFX;
 import frc.robot.util.LoggedTunableNumber;
-import java.util.function.DoubleSupplier;
-import org.littletonrobotics.junction.Logger;
 import org.littletonrobotics.junction.networktables.LoggedDashboardChooser;
 
 /**
@@ -77,67 +48,32 @@ import org.littletonrobotics.junction.networktables.LoggedDashboardChooser;
  */
 public class RobotContainer {
   // Subsystems
-  public final Drive drive;
-  // Dashboard tuning
-  private LoggedTunableNumber hoodAngleDegTunable = new LoggedTunableNumber("Hood/AngleDeg", 0);
-  private LoggedTunableNumber shooterVelRpsTunable = new LoggedTunableNumber("Shooter/VelRps", 0);
-  private LoggedTunableNumber testShooterVel =
-      new LoggedTunableNumber("TestShoot/ShooterVelRPS", 26.0);
-  private LoggedTunableNumber testHoodAngle =
-      new LoggedTunableNumber("TestShoot/HoodAngleDeg", 6.0);
-  private LoggedTunableNumber testFeederVel = new LoggedTunableNumber("TestShoot/FeederVelRPS", 20);
-  private LoggedTunableNumber testIndexerVolts =
-      new LoggedTunableNumber("TestShoot/IndexerVolts", 3.0);
-  private LoggedTunableNumber testUseInterpolation =
-      new LoggedTunableNumber("TestShoot/UseInterpolation", 0.0);
+  private final Drive drive;
 
-  @SuppressWarnings("unused")
-  public final Shooter shooter;
-
-  @SuppressWarnings("unused")
-  public final Hood hood;
-
-  @SuppressWarnings("unused")
-  public final Feeder feeder;
-
-  @SuppressWarnings("unused")
-  public final Intake intake;
-
-  @SuppressWarnings("unused")
-  public final Indexer indexer;
-
-  @SuppressWarnings("unused")
-  public final Hopper hopper;
-
-  @SuppressWarnings("unused")
-  public final LED led;
+  // path planner
 
   // Controller
-  public final CommandXboxController controller = new CommandXboxController(0);
-
-  /** Driver X speed supplier (forward/back). */
-  public DoubleSupplier getDriveXSupplier() {
-    return () -> -controller.getLeftY();
-  }
-
-  /** Driver Y speed supplier (left/right). */
-  public DoubleSupplier getDriveYSupplier() {
-    return () -> -controller.getLeftX();
-  }
-
-  /** Right trigger axis supplier in range [0, 1]. */
-  public DoubleSupplier getRightTriggerAxisSupplier() {
-    return () -> controller.getRightTriggerAxis();
-  }
-
+  private final CommandXboxController controller = new CommandXboxController(0);
+  public final LoggedTunableNumber ShooterTestRPS = new LoggedTunableNumber("SHooterRPS", 60);
+  public final LoggedTunableNumber IndexerTestRPS = new LoggedTunableNumber("IndexerRPS", 50);
+  public final LoggedTunableNumber BeltTestRPS = new LoggedTunableNumber("BeltRPS", 60);
+  public final LoggedTunableNumber IndexerShootVolts =
+      new LoggedTunableNumber("IndexerShootVolts", 12.0);
+  public final LoggedTunableNumber BeltShootVolts = new LoggedTunableNumber("BeltShootVolts", 12.0);
+  public final LoggedTunableNumber HoodAngle = new LoggedTunableNumber("HoodAngle", 0);
   // Dashboard inputs
   private final LoggedDashboardChooser<Command> autoChooser;
+  public ShooterSubsystem shooterSubsystem = new ShooterSubsystem();
+  public FeederSubsystem feederSubsystem = new FeederSubsystem();
+  public IntakeSubsystem intakeSubsystem = new IntakeSubsystem();
 
-  /** The container for the robot. Contains subsystems, OI devices, and commands. */
+  /** The container for the robot. Contains subsystems, OI devices, a nd commands. */
   public RobotContainer() {
     switch (Constants.currentMode) {
       case REAL:
         // Real robot, instantiate hardware IO implementations
+        // ModuleIOTalonFX is intended for modules with TalonFX drive, TalonFX turn, and
+        // a CANcoder
         drive =
             new Drive(
                 new GyroIOPigeon2(),
@@ -145,14 +81,24 @@ public class RobotContainer {
                 new ModuleIOTalonFX(TunerConstants.FrontRight),
                 new ModuleIOTalonFX(TunerConstants.BackLeft),
                 new ModuleIOTalonFX(TunerConstants.BackRight));
-        shooter = new Shooter(new ShooterIOTalonFX());
-        hood = new Hood(new HoodIOTalonFX());
-        feeder = new Feeder(new FeederIOTalonFX());
-        intake = new Intake(new IntakeIOTalonFX());
 
-        indexer = new Indexer(new IndexerIOTalonFX());
-        hopper = new Hopper(new HopperIO() {});
-        led = new LED(new LEDIO() {});
+        // The ModuleIOTalonFXS implementation provides an example implementation for
+        // TalonFXS controller connected to a CANdi with a PWM encoder. The
+        // implementations
+        // of ModuleIOTalonFX, ModuleIOTalonFXS, and ModuleIOSpark (from the Spark
+        // swerve
+        // template) can be freely intermixed to support alternative hardware
+        // arrangements.
+        // Please see the AdvantageKit template documentation for more information:
+        // https://docs.advantagekit.org/getting-started/template-projects/talonfx-swerve-template#custom-module-implementations
+        //
+        // drive =
+        // new Drive(
+        // new GyroIOPigeon2(),
+        // new ModuleIOTalonFXS(TunerConstants.FrontLeft),
+        // new ModuleIOTalonFXS(TunerConstants.FrontRight),
+        // new ModuleIOTalonFXS(TunerConstants.BackLeft),
+        // new ModuleIOTalonFXS(TunerConstants.BackRight));
         break;
 
       case SIM:
@@ -164,13 +110,6 @@ public class RobotContainer {
                 new ModuleIOSim(TunerConstants.FrontRight),
                 new ModuleIOSim(TunerConstants.BackLeft),
                 new ModuleIOSim(TunerConstants.BackRight));
-        shooter = new Shooter(new ShooterIO() {});
-        hood = new Hood(new HoodIO() {});
-        feeder = new Feeder(new FeederIO() {});
-        intake = new Intake(new IntakeIO() {});
-        indexer = new Indexer(new IndexerIO() {});
-        hopper = new Hopper(new HopperIO() {});
-        led = new LED(new LEDIO() {});
         break;
 
       default:
@@ -182,24 +121,17 @@ public class RobotContainer {
                 new ModuleIO() {},
                 new ModuleIO() {},
                 new ModuleIO() {});
-        shooter = new Shooter(new ShooterIO() {});
-        hood = new Hood(new HoodIO() {});
-        feeder = new Feeder(new FeederIO() {});
-        intake = new Intake(new IntakeIO() {});
-        indexer = new Indexer(new IndexerIO() {});
-        hopper = new Hopper(new HopperIO() {});
-        led = new LED(new LEDIO() {});
         break;
     }
+
+    NamedCommands.registerCommand("AIMandShoot", new Aimbot(IndexerShootVolts, BeltShootVolts));
 
     // Set up auto routines
     autoChooser = new LoggedDashboardChooser<>("Auto Choices", AutoBuilder.buildAutoChooser());
 
     // Set up SysId routines
-    autoChooser.addOption("Up", new UpOut(this).withTimeout(20.5));
-    autoChooser.addOption("Magic", new DownMagic(this).withTimeout(20.5));
-
-    autoChooser.addOption("Down", new Down(this).withTimeout(20.5));
+    autoChooser.addOption(
+        "Drive Wheel Radius Characterization", DriveCommands.wheelRadiusCharacterization(drive));
     autoChooser.addOption(
         "Drive Simple FF Characterization", DriveCommands.feedforwardCharacterization(drive));
     autoChooser.addOption(
@@ -213,13 +145,23 @@ public class RobotContainer {
     autoChooser.addOption(
         "Drive SysId (Dynamic Reverse)", drive.sysIdDynamic(SysIdRoutine.Direction.kReverse));
 
+    // Wheel Rotation Tests
+    autoChooser.addOption(
+        "Rotate All Modules to 0 Degrees",
+        DriveCommands.rotateModulesToAngle(drive, Rotation2d.fromDegrees(0)));
+    autoChooser.addOption(
+        "Rotate All Modules to 90 Degrees",
+        DriveCommands.rotateModulesToAngle(drive, Rotation2d.fromDegrees(90)));
+    autoChooser.addOption(
+        "Rotate All Modules to 45 Degrees",
+        DriveCommands.rotateModulesToAngle(drive, Rotation2d.fromDegrees(45)));
+    autoChooser.addOption(
+        "Rotate FL Module to 90 Degrees",
+        DriveCommands.rotateModuleToAngle(drive, 0, Rotation2d.fromDegrees(90)));
+    autoChooser.addDefaultOption("default", new PathPlannerAuto("New Auto"));
+
     // Configure the button bindings
     configureButtonBindings();
-
-    // Default commands
-    led.setDefaultCommand(new LEDDefaultCommand(this));
-    feeder.setDefaultCommand(new DefaultFeederCommand(feeder));
-    indexer.setDefaultCommand(new DefaultIndexerCommand(indexer));
   }
 
   /**
@@ -233,102 +175,114 @@ public class RobotContainer {
     drive.setDefaultCommand(
         DriveCommands.joystickDrive(
             drive,
-            () -> -controller.getLeftY(),
-            () -> -controller.getLeftX(),
-            () -> -controller.getRightX()));
+            () -> -controller.getRawAxis(1),
+            () -> -controller.getRawAxis(0),
+            () -> -controller.getRawAxis(4)));
+
+    // Drive and gyro controls
+    controller
+        .b()
+        .onTrue(
+            Commands.runOnce(
+                    () ->
+                        drive.setPose(
+                            new Pose2d(drive.getPose().getTranslation(), Rotation2d.kZero)),
+                    drive)
+                .ignoringDisable(true));
     controller
         .povUp()
         .whileTrue(
-            Commands.run(
-                () -> {
-                  drive.runVelocity(new ChassisSpeeds(2, 0, 0));
-                },
-                drive));
+            new InstantCommand(() -> drive.runVelocity(new ChassisSpeeds(1, 0, 0)), drive)
+                .alongWith(new WaitCommand(20)));
+    controller
+        .povRight()
+        .whileTrue(
+            new InstantCommand(() -> drive.runVelocity(new ChassisSpeeds(0, 1, 0)), drive)
+                .alongWith(new WaitCommand(20)));
 
-    // Debug: log nearest trench pre-align pose
-    controller.rightStick().whileTrue(new SmashBumpCommand(this));
-    controller.leftStick().whileTrue(new SmashTrenchCommand(this));
-
-    // Manual tuning buttons
+    // Intake controls
+    controller
+        .rightBumper()
+        .onTrue(new InstantCommand(() -> intakeSubsystem.setPivotZero()).ignoringDisable(true));
+    controller
+        .leftBumper()
+        .whileTrue(new InstantCommand(() -> intakeSubsystem.setIntakeRps(60)))
+        .onFalse(new InstantCommand(() -> intakeSubsystem.setIntakeVoltage(0)));
     // controller
-    //     .a()
-    //     .whileTrue(new InstantCommand(() -> shooter.setVelocity(shooterVelRpsTunable.get())));
-    // controller.x().whileTrue(new InstantCommand(() -> hood.setAngle(hoodAngleDegTunable.get())));
+    //     .rightBumper()
+    //     .whileTrue(
+    //         Commands.run(
+    //             () -> {
+    //               shooterSubsystem.setShooterRps(ShooterTestRPS.getAsDouble());
+    //               shooterSubsystem.setHoodAngle(HoodAngle.getAsDouble());
+    //             },
+    //             shooterSubsystem))
+    //     .onFalse(new InstantCommand(() -> shooterSubsystem.setShooterVoltage(0),
+    // shooterSubsystem));
+    // controller
+    //     .leftBumper()
+    //     .whileTrue(new InstantCommand(() -> feederSubsystem.setIndexerVoltage(8),
+    // feederSubsystem))
+    //     .onFalse(new InstantCommand(() -> feederSubsystem.setIndexerVoltage(0),
+    // feederSubsystem));
+    controller.a().onTrue(new PivotInit(intakeSubsystem));
+    controller.y().whileTrue(new IntakeSwing(intakeSubsystem, 0, 40));
 
-    // // Switch to X pattern when X button is pressed
+    // Shooter controls
+    // Switch to X pattern when X button is pressed
     // controller.x().onTrue(Commands.runOnce(drive::stopWithX, drive));
     controller
-        .leftBumper()
-        .onTrue(new InstantCommand(() -> intake.setWantedState(Intake.WantedState.DOWN_INTAKE)));
-    controller
-        .leftBumper()
-        .onFalse(new InstantCommand(() -> intake.setWantedState(Intake.WantedState.UP_STOW_STOP)));
-    controller
-        .povDown()
+        .x()
         .onTrue(
-            new InstantCommand(
-                () -> {
-                  Logger.recordOutput(
-                      "Bump/AlignPose", FieldConstants.getNearestTrenchPrePose(drive.getPose()));
-                }));
+            new InstantCommand(() -> shooterSubsystem.setHoodZero())
+                .ignoringDisable(true)
+                .alongWith(new InstantCommand(() -> intakeSubsystem.setPivotZero())));
+    controller.rightTrigger().whileTrue(new Aimbot(IndexerShootVolts, BeltShootVolts));
 
-    // Reset gyro to 0° when B button is pressed
-    controller
-        .start()
-        .onTrue(
-            Commands.runOnce(
-                    () -> {
-                      if (DriverStation.isDisabled()) {
-                        if (autoChooser.getSendableChooser().getSelected() == "Up") {
-                          drive.setPose(UpOut.getStartPose(DriverStation.getAlliance().get()));
-                        } else {
-                          drive.setPose(DownMagic.getStartPose(DriverStation.getAlliance().get()));
-                        }
-                      } else {
-                        drive.setPose(
-                            DriverStation.getAlliance().get() == Alliance.Blue
-                                ? new Pose2d(3.22, 4.030, new Rotation2d())
-                                : new Pose2d(3.22, 4.030, new Rotation2d())
-                                    .rotateAround(FieldConstants.FIELD_CENTER, Rotation2d.k180deg));
-                      }
-                    },
-                    drive)
-                .ignoringDisable(true));
-    // controller
-    //     .b()
-    //     .onTrue(
-    //         Commands.runOnce(
-    //                 () -> drive.setPose(UpOut.getStartPose(DriverStation.getAlliance().get())),
-    //                 drive)
-    //             .ignoringDisable(true));
-
-    controller.leftTrigger().whileTrue(new MegaTrackIterativeCommand(this, false));
-    controller.b().whileTrue(new MegaTrackIterativeCommand(this, true));
-    controller
-        .a()
-        .onTrue(new InstantCommand(() -> intake.setWantedState(Intake.WantedState.UP_DEBUG)));
-    // POV Left: 触发 Intake Deploy 归零流程
+    // Manual Shooter Control (POV Left)
     controller
         .povLeft()
-        .onTrue(new InstantCommand(() -> intake.setWantedState(Intake.WantedState.HOMING)));
-    // controller
-    //     .a()
-    //     .whileTrue(
-    //         new MegaTrackIterativeCommand(this, true));
+        .toggleOnTrue(
+            Commands.runEnd(
+                () -> {
+                  shooterSubsystem.setShooterRps(ShooterTestRPS.get());
+                  // Keep manual hood control active while shooting
+                  double hoodVolts = -MathUtil.applyDeadband(controller.getRightY(), 0.1) * 12.0;
+                  shooterSubsystem.setHoodVoltage(hoodVolts);
+                },
+                () -> {
+                  shooterSubsystem.setShooterVoltage(0);
+                },
+                shooterSubsystem));
 
-    // Y: TestShootCommand — all params NT4 tunable, right trigger to feed
-    // Dashboard "TestShoot/UseInterpolation": 0 = direct mode, nonzero = interpolation mode
+    // Assisted trench routine
     controller
-        .y()
-        .whileTrue(
-            new TestShootCommand(
-                this,
-                () -> testUseInterpolation.get(),
-                () -> testShooterVel.get(),
-                () -> testHoodAngle.get(),
-                () -> testFeederVel.get(),
-                () -> testIndexerVolts.get(),
-                0.25));
+        .rightStick()
+        .whileTrue(new AutonTrench(drive, shooterSubsystem, () -> controller.getLeftY()));
+    controller
+        .leftStick()
+        .whileTrue(new InstantCommand(() -> Drive.velocitylimit = false))
+        .onFalse(new InstantCommand(() -> Drive.velocitylimit = true));
+
+    // Manual Feed and Swing (POV Down)
+    controller
+        .povDown()
+        .toggleOnTrue(
+            new IntakeSwing(
+                    intakeSubsystem,
+                    Constants.ShooterSubsystemPID.swing_angle_1,
+                    Constants.ShooterSubsystemPID.swing_angle_2)
+                .alongWith(
+                    Commands.runEnd(
+                        () -> {
+                          feederSubsystem.setIndexerVoltage(IndexerShootVolts.get());
+                          feederSubsystem.setBeltVoltage(BeltShootVolts.get());
+                        },
+                        () -> {
+                          feederSubsystem.setIndexerVoltage(0);
+                          feederSubsystem.setBeltVoltage(0);
+                        },
+                        feederSubsystem)));
   }
 
   /**
@@ -340,3 +294,57 @@ public class RobotContainer {
     return autoChooser.get();
   }
 }
+
+    // D-Pad controls for fine translation (0.5x max speed, Field-Relative)
+    // Forward (Up)
+    // controller
+    //     .povUp()
+    //     .whileTrue(
+    //         Commands.run(
+    //             () ->
+    //                 drive.runVelocity(
+    //                     ChassisSpeeds.fromFieldRelativeSpeeds(
+    //                         drive.getMaxLinearSpeedMetersPerSec() * 0.5,
+    //                         0.0,
+    //                         0.0,
+    //                         drive.getRotation())),
+    //             drive));
+    // // Backward (Down)
+    // controller
+    //     .povDown()
+    //     .whileTrue(
+    //         Commands.run(
+    //             () ->
+    //                 drive.runVelocity(
+    //                     ChassisSpeeds.fromFieldRelativeSpeeds(
+    //                         -drive.getMaxLinearSpeedMetersPerSec() * 0.5,
+    //                         0.0,
+    //                         0.0,
+    //                         drive.getRotation())),
+    //             drive));
+    // // Left (Left)
+    // controller
+    //     .povLeft()
+    //     .whileTrue(
+    //         Commands.run(
+    //             () ->
+    //                 drive.runVelocity(
+    //                     ChassisSpeeds.fromFieldRelativeSpeeds(
+    //                         0.0,
+    //                         drive.getMaxLinearSpeedMetersPerSec() * 0.5,
+    //                         0.0,
+    //                         drive.getRotation())),
+    //             drive));
+    // // Right (Right)
+    // controller
+    //     .povRight()
+    //     .whileTrue(
+    //         Commands.run(
+    //             () ->
+    //                 drive.runVelocity(
+    //                     ChassisSpeeds.fromFieldRelativeSpeeds(
+    //                         0.0,
+    //                         -drive.getMaxLinearSpeedMetersPerSec() * 0.5,
+    //                         0.0,
+    //                         drive.getRotation())),
+    //             drive));

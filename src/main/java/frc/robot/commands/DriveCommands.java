@@ -1,15 +1,9 @@
-// Copyright 2021-2025 FRC 6328
+// Copyright (c) 2021-2026 Littleton Robotics
 // http://github.com/Mechanical-Advantage
 //
-// This program is free software; you can redistribute it and/or
-// modify it under the terms of the GNU General Public License
-// version 3 as published by the Free Software Foundation or
-// available in the root directory of this project.
-//
-// This program is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-// GNU General Public License for more details.
+// Use of this source code is governed by a BSD
+// license that can be found in the LICENSE file
+// at the root directory of this project.
 
 package frc.robot.commands;
 
@@ -46,14 +40,11 @@ public class DriveCommands {
   private static final double FF_RAMP_RATE = 0.1; // Volts/Sec
   private static final double WHEEL_RADIUS_MAX_VELOCITY = 0.25; // Rad/Sec
   private static final double WHEEL_RADIUS_RAMP_RATE = 0.05; // Rad/Sec^2
+  private static final double DEFAULT_ANGLE_TOLERANCE = Math.toRadians(2.0); // 2 degrees
+  private static final double ROTATION_VELOCITY_TOLERANCE = 0.1; // rad/s
 
   private DriveCommands() {}
-  /**
-   * Converts joystick inputs into a linear velocity vector.
-   *
-   * <p>This method applies a deadband and squares the magnitude for more precise control at low
-   * speeds.
-   */
+
   public static Translation2d getLinearVelocityFromJoysticks(double x, double y) {
     // Apply deadband
     double linearMagnitude = MathUtil.applyDeadband(Math.hypot(x, y), DEADBAND);
@@ -61,10 +52,9 @@ public class DriveCommands {
 
     // Square magnitude for more precise control
     linearMagnitude = linearMagnitude * linearMagnitude;
-
     // Return new linear velocity
-    return new Pose2d(new Translation2d(), linearDirection)
-        .transformBy(new Transform2d(linearMagnitude, 0.0, new Rotation2d()))
+    return new Pose2d(Translation2d.kZero, linearDirection)
+        .transformBy(new Transform2d(linearMagnitude, 0.0, Rotation2d.kZero))
         .getTranslation();
   }
 
@@ -81,19 +71,22 @@ public class DriveCommands {
           // Get linear velocity
           Translation2d linearVelocity =
               getLinearVelocityFromJoysticks(xSupplier.getAsDouble(), ySupplier.getAsDouble());
+          if (Drive.velocitylimit) {
+            linearVelocity = linearVelocity.times(0.7);
+          }
 
           // Apply rotation deadband
           double omega = MathUtil.applyDeadband(omegaSupplier.getAsDouble(), DEADBAND);
 
           // Square rotation value for more precise control
-          omega = Math.copySign(omega, omega);
+          omega = Math.copySign(omega * omega, omega);
 
           // Convert to field relative speeds & send command
           ChassisSpeeds speeds =
               new ChassisSpeeds(
                   linearVelocity.getX() * drive.getMaxLinearSpeedMetersPerSec(),
                   linearVelocity.getY() * drive.getMaxLinearSpeedMetersPerSec(),
-                  omega * drive.getMaxAngularSpeedRadPerSec() * 0.5);
+                  omega * drive.getMaxAngularSpeedRadPerSec());
           boolean isFlipped =
               DriverStation.getAlliance().isPresent()
                   && DriverStation.getAlliance().get() == Alliance.Red;
@@ -159,6 +152,124 @@ public class DriveCommands {
 
         // Reset PID controller when command starts
         .beforeStarting(() -> angleController.reset(drive.getRotation().getRadians()));
+  }
+
+  /**
+   * Rotate the chassis to a specified field-absolute angle. The command ends automatically when the
+   * target angle is reached and stabilized.
+   *
+   * @param drive The drive subsystem
+   * @param targetAngle Target angle (field coordinate system)
+   * @param angleTolerance Angle tolerance (radians)
+   * @return The rotation command
+   */
+  public static Command rotateToAngle(Drive drive, Rotation2d targetAngle, double angleTolerance) {
+    ProfiledPIDController angleController =
+        new ProfiledPIDController(
+            ANGLE_KP,
+            0.0,
+            ANGLE_KD,
+            new TrapezoidProfile.Constraints(ANGLE_MAX_VELOCITY, ANGLE_MAX_ACCELERATION));
+    angleController.enableContinuousInput(-Math.PI, Math.PI);
+    angleController.setTolerance(angleTolerance, ROTATION_VELOCITY_TOLERANCE);
+
+    return Commands.run(
+            () -> {
+              double omega =
+                  angleController.calculate(
+                      drive.getRotation().getRadians(), targetAngle.getRadians());
+              drive.runVelocity(new ChassisSpeeds(0.0, 0.0, omega));
+            },
+            drive)
+        .until(angleController::atGoal)
+        .beforeStarting(() -> angleController.reset(drive.getRotation().getRadians()))
+        .finallyDo(() -> drive.stop());
+  }
+
+  /**
+   * Rotate the chassis to a specified field-absolute angle (using default 2-degree tolerance).
+   *
+   * @param drive The drive subsystem
+   * @param targetAngle Target angle (field coordinate system)
+   * @return The rotation command
+   */
+  public static Command rotateToAngle(Drive drive, Rotation2d targetAngle) {
+    return rotateToAngle(drive, targetAngle, DEFAULT_ANGLE_TOLERANCE);
+  }
+
+  /**
+   * Rotate the chassis by a specified angle from the current position.
+   *
+   * @param drive The drive subsystem
+   * @param deltaAngle Angle to rotate (positive = counter-clockwise, negative = clockwise)
+   * @param angleTolerance Angle tolerance (radians)
+   * @return The rotation command
+   */
+  public static Command rotateByAngle(Drive drive, Rotation2d deltaAngle, double angleTolerance) {
+    // Use array to store target angle calculated at command start
+    Rotation2d[] targetHolder = new Rotation2d[1];
+
+    ProfiledPIDController angleController =
+        new ProfiledPIDController(
+            ANGLE_KP,
+            0.0,
+            ANGLE_KD,
+            new TrapezoidProfile.Constraints(ANGLE_MAX_VELOCITY, ANGLE_MAX_ACCELERATION));
+    angleController.enableContinuousInput(-Math.PI, Math.PI);
+    angleController.setTolerance(angleTolerance, ROTATION_VELOCITY_TOLERANCE);
+
+    return Commands.run(
+            () -> {
+              double omega =
+                  angleController.calculate(
+                      drive.getRotation().getRadians(), targetHolder[0].getRadians());
+              drive.runVelocity(new ChassisSpeeds(0.0, 0.0, omega));
+            },
+            drive)
+        .until(angleController::atGoal)
+        .beforeStarting(
+            () -> {
+              targetHolder[0] = drive.getRotation().plus(deltaAngle);
+              angleController.reset(drive.getRotation().getRadians());
+            })
+        .finallyDo(() -> drive.stop());
+  }
+
+  /**
+   * Rotate the chassis by a specified angle from the current position (using default 2-degree
+   * tolerance).
+   *
+   * @param drive The drive subsystem
+   * @param deltaAngle Angle to rotate (positive = counter-clockwise, negative = clockwise)
+   * @return The rotation command
+   */
+  public static Command rotateByAngle(Drive drive, Rotation2d deltaAngle) {
+    return rotateByAngle(drive, deltaAngle, DEFAULT_ANGLE_TOLERANCE);
+  }
+
+  /**
+   * Rotate all swerve modules (wheels) to a specified absolute angle. Note: This only changes wheel
+   * orientation, it does not drive the wheels.
+   *
+   * @param drive The drive subsystem
+   * @param angle Target angle
+   * @return The command
+   */
+  public static Command rotateModulesToAngle(Drive drive, Rotation2d angle) {
+    return Commands.run(() -> drive.runWheelAngles(angle), drive);
+  }
+
+  /**
+   * Rotate a specified swerve module (wheel) to a specified absolute angle. Note: This only changes
+   * wheel orientation, it does not drive the wheel. Module index: 0-FL, 1-FR, 2-BL, 3-BR
+   *
+   * @param drive The drive subsystem
+   * @param moduleIndex Module index
+   * @param angle Target angle
+   * @return The command
+   */
+  public static Command rotateModuleToAngle(Drive drive, int moduleIndex, Rotation2d angle) {
+    return Commands.run(() -> drive.runModuleAngle(moduleIndex, angle), drive);
   }
 
   /**
@@ -295,7 +406,7 @@ public class DriveCommands {
 
   private static class WheelRadiusCharacterizationState {
     double[] positions = new double[4];
-    Rotation2d lastAngle = new Rotation2d();
+    Rotation2d lastAngle = Rotation2d.kZero;
     double gyroDelta = 0.0;
   }
 }

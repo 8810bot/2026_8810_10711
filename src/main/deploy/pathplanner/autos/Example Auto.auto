@@ -9,12 +9,6 @@
           "data": {
             "pathName": "Example Path"
           }
-        },
-        {
-          "type": "path",
-          "data": {
-            "pathName": "Example Path"
-          }
         }
       ]
     }
