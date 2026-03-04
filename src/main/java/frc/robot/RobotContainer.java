@@ -90,6 +90,7 @@ public class RobotContainer {
       new LoggedTunableNumber("TestShoot/IndexerVolts", 3.0);
   private LoggedTunableNumber testUseInterpolation =
       new LoggedTunableNumber("TestShoot/UseInterpolation", 0.0);
+  private LoggedTunableNumber testAutoAim = new LoggedTunableNumber("TestShoot/AutoAim", 0.0);
 
   @SuppressWarnings("unused")
   public final Shooter shooter;
@@ -317,13 +318,15 @@ public class RobotContainer {
     //         new MegaTrackIterativeCommand(this, true));
 
     // Y: TestShootCommand — all params NT4 tunable, right trigger to feed
-    // Dashboard "TestShoot/UseInterpolation": 0 = direct mode, nonzero = interpolation mode
+    // Dashboard "TestShoot/UseInterpolation": 0 = direct, nonzero = interpolation
+    // Dashboard "TestShoot/AutoAim": 0 = off, nonzero = auto-aim heading to hub
     controller
         .y()
         .whileTrue(
             new TestShootCommand(
                 this,
                 () -> testUseInterpolation.get(),
+                () -> testAutoAim.get(),
                 () -> testShooterVel.get(),
                 () -> testHoodAngle.get(),
                 () -> testFeederVel.get(),

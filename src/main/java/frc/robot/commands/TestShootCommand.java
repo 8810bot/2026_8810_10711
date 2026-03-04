@@ -1,11 +1,16 @@
 package frc.robot.commands;
 
+import edu.wpi.first.math.MathUtil;
+import edu.wpi.first.math.controller.PIDController;
+import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
+import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.DriverStation.Alliance;
 import edu.wpi.first.wpilibj2.command.Command;
 import frc.robot.Constants.AutoShootConstants;
 import frc.robot.Constants.FieldConstants;
+import frc.robot.Constants.MegaTrackIterativeCommandConstants;
 import frc.robot.RobotContainer;
 import frc.robot.constants.ShooterConstants;
 import frc.robot.subsystems.intake.Intake.WantedState;
@@ -25,6 +30,10 @@ import org.littletonrobotics.junction.Logger;
  *       correct.
  * </ul>
  *
+ * <p>Auto-aim heading control is toggled by NT4 tunable "TestShoot/AutoAim" (0=off, nonzero=on).
+ * When enabled, the robot automatically rotates to face the hub while the driver retains
+ * translational control. Uses the same PID gains as MegaTrackIterativeCommand.
+ *
  * <p>Mode can be switched live via dashboard without releasing the button.
  *
  * <p>Both modes log distance-to-hub, setpoints, measured values, table lookups, and errors via NT4
@@ -35,15 +44,24 @@ import org.littletonrobotics.junction.Logger;
 public class TestShootCommand extends Command {
   private final RobotContainer robotContainer;
   private final DoubleSupplier useInterpolationSupplier;
+  private final DoubleSupplier autoAimSupplier;
   private final DoubleSupplier shooterRpsSupplier;
   private final DoubleSupplier hoodDegSupplier;
   private final DoubleSupplier feederRpsSupplier;
   private final DoubleSupplier indexerVoltsSupplier;
   private final double triggerThreshold;
 
+  // Heading PID (same gains as MegaTrackIterativeCommand)
+  private final PIDController headingController =
+      new PIDController(
+          MegaTrackIterativeCommandConstants.HEADING_KP,
+          MegaTrackIterativeCommandConstants.HEADING_KI,
+          MegaTrackIterativeCommandConstants.HEADING_KD);
+
   /**
    * @param robotContainer RobotContainer
    * @param useInterpolationSupplier 0 = direct mode, nonzero = interpolation mode, NT4 tunable
+   * @param autoAimSupplier 0 = no auto-aim, nonzero = auto-aim heading to hub, NT4 tunable
    * @param shooterRpsSupplier flywheel velocity setpoint (RPS), used in direct mode, NT4 tunable
    * @param hoodDegSupplier hood angle setpoint (degrees), used in direct mode, NT4 tunable
    * @param feederRpsSupplier feeder velocity (RPS), NT4 tunable
@@ -53,6 +71,7 @@ public class TestShootCommand extends Command {
   public TestShootCommand(
       RobotContainer robotContainer,
       DoubleSupplier useInterpolationSupplier,
+      DoubleSupplier autoAimSupplier,
       DoubleSupplier shooterRpsSupplier,
       DoubleSupplier hoodDegSupplier,
       DoubleSupplier feederRpsSupplier,
@@ -60,12 +79,15 @@ public class TestShootCommand extends Command {
       double triggerThreshold) {
     this.robotContainer = robotContainer;
     this.useInterpolationSupplier = useInterpolationSupplier;
+    this.autoAimSupplier = autoAimSupplier;
     this.shooterRpsSupplier = shooterRpsSupplier;
     this.hoodDegSupplier = hoodDegSupplier;
     this.feederRpsSupplier = feederRpsSupplier;
     this.indexerVoltsSupplier = indexerVoltsSupplier;
     this.triggerThreshold = triggerThreshold;
+    headingController.enableContinuousInput(-Math.PI, Math.PI);
     addRequirements(
+        robotContainer.drive,
         robotContainer.shooter,
         robotContainer.hood,
         robotContainer.feeder,
@@ -73,21 +95,27 @@ public class TestShootCommand extends Command {
         robotContainer.intake);
   }
 
-  private double getDistToHub() {
-    Alliance alliance = DriverStation.getAlliance().orElse(Alliance.Blue);
-    Translation2d hubLocation = FieldConstants.getHubLocation(alliance);
+  private Translation2d getHubLocation() {
+    return FieldConstants.getHubLocation(DriverStation.getAlliance().orElse(Alliance.Blue));
+  }
+
+  private Translation2d getShotOrigin() {
     Translation2d robotTranslation = robotContainer.drive.getPose().getTranslation();
-    Translation2d shotOrigin =
-        robotTranslation.plus(
-            new Translation2d(
-                    ShooterConstants.FLYWHEEL_OFFSET_X_METERS,
-                    ShooterConstants.FLYWHEEL_OFFSET_Y_METERS)
-                .rotateBy(robotContainer.drive.getPose().getRotation()));
-    return shotOrigin.getDistance(hubLocation);
+    return robotTranslation.plus(
+        new Translation2d(
+                ShooterConstants.FLYWHEEL_OFFSET_X_METERS,
+                ShooterConstants.FLYWHEEL_OFFSET_Y_METERS)
+            .rotateBy(robotContainer.drive.getPose().getRotation()));
+  }
+
+  private double getDistToHub() {
+    return getShotOrigin().getDistance(getHubLocation());
   }
 
   @Override
-  public void initialize() {}
+  public void initialize() {
+    headingController.reset();
+  }
 
   @Override
   public void execute() {
@@ -95,6 +123,7 @@ public class TestShootCommand extends Command {
     double indexerVolts = indexerVoltsSupplier.getAsDouble();
     double distToHub = getDistToHub();
     boolean useInterpolation = useInterpolationSupplier.getAsDouble() != 0.0;
+    boolean autoAim = autoAimSupplier.getAsDouble() != 0.0;
 
     double shooterRps;
     double hoodDeg;
@@ -116,6 +145,58 @@ public class TestShootCommand extends Command {
     robotContainer.shooter.setVelocity(shooterRps);
     robotContainer.hood.setAngle(hoodDeg);
 
+    // --- Auto-aim heading control ---
+    if (autoAim) {
+      // Target heading: from shot origin to hub
+      Translation2d toHub = getHubLocation().minus(getShotOrigin());
+      Rotation2d targetHeading = toHub.getAngle();
+
+      // PID omega
+      double omega =
+          headingController.calculate(
+              robotContainer.drive.getRotation().getRadians(), targetHeading.getRadians());
+      omega =
+          MathUtil.clamp(
+              omega,
+              -MegaTrackIterativeCommandConstants.MAX_OMEGA,
+              MegaTrackIterativeCommandConstants.MAX_OMEGA);
+
+      // Driver translation (field-relative), same as MegaTrackIterativeCommand
+      Translation2d linearVelocity =
+          DriveCommands.getLinearVelocityFromJoysticks(
+              robotContainer.getDriveXSupplier().getAsDouble(),
+              robotContainer.getDriveYSupplier().getAsDouble());
+
+      boolean isFlipped =
+          DriverStation.getAlliance().isPresent()
+              && DriverStation.getAlliance().get() == Alliance.Red;
+
+      ChassisSpeeds fieldRelative =
+          new ChassisSpeeds(
+              linearVelocity.getX() * robotContainer.drive.getMaxLinearSpeedMetersPerSec(),
+              linearVelocity.getY() * robotContainer.drive.getMaxLinearSpeedMetersPerSec(),
+              omega);
+
+      robotContainer.drive.runVelocity(
+          ChassisSpeeds.fromFieldRelativeSpeeds(
+              fieldRelative,
+              isFlipped
+                  ? robotContainer.drive.getRotation().plus(new Rotation2d(Math.PI))
+                  : robotContainer.drive.getRotation()));
+
+      // Log auto-aim data
+      double headingErrDeg =
+          Math.toDegrees(
+              MathUtil.angleModulus(
+                  targetHeading.getRadians() - robotContainer.drive.getRotation().getRadians()));
+      Logger.recordOutput("TestShoot/AutoAim", true);
+      Logger.recordOutput("TestShoot/TargetHeadingDeg", targetHeading.getDegrees());
+      Logger.recordOutput("TestShoot/HeadingErrDeg", headingErrDeg);
+      Logger.recordOutput("TestShoot/Omega", omega);
+    } else {
+      Logger.recordOutput("TestShoot/AutoAim", false);
+    }
+
     // Log: setpoints
     Logger.recordOutput("TestShoot/ShooterRpsSetpoint", shooterRps);
     Logger.recordOutput("TestShoot/HoodDegSetpoint", hoodDeg);
@@ -124,6 +205,14 @@ public class TestShootCommand extends Command {
 
     // Log: measurements for table calibration
     Logger.recordOutput("TestShoot/DistToHubMeters", distToHub);
+    Logger.recordOutput(
+        "TestShoot/DistToHubFromCenter",
+        robotContainer
+            .drive
+            .getPose()
+            .getTranslation()
+            .getDistance(
+                FieldConstants.getHubLocation(DriverStation.getAlliance().orElse(Alliance.Blue))));
     Logger.recordOutput("TestShoot/MeasuredShooterRps", measuredShooterRps);
     Logger.recordOutput("TestShoot/MeasuredHoodDeg", measuredHoodDeg);
     Logger.recordOutput("TestShoot/ShooterErrRps", shooterRps - measuredShooterRps);
@@ -133,6 +222,10 @@ public class TestShootCommand extends Command {
     Logger.recordOutput(
         "TestShoot/TableShooterRps", AutoShootConstants.shooterSpeedMap.get(distToHub));
     Logger.recordOutput("TestShoot/TableHoodDeg", AutoShootConstants.hoodAngleMap.get(distToHub));
+
+    // Hopper status (sensor-only, no motors)
+    Logger.recordOutput("TestShoot/HopperFull", robotContainer.hopper.isFull());
+    Logger.recordOutput("TestShoot/HopperConnected", robotContainer.hopper.isConnected());
 
     // Feed control (right trigger gated)
     if (robotContainer.getRightTriggerAxisSupplier().getAsDouble() > triggerThreshold) {
@@ -156,6 +249,7 @@ public class TestShootCommand extends Command {
 
   @Override
   public void end(boolean interrupted) {
+    robotContainer.drive.stop();
     robotContainer.feeder.stop();
     robotContainer.indexer.stop();
     robotContainer.intake.setWantedState(WantedState.UP_STOW_STOP);

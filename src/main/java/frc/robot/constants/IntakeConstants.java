@@ -26,7 +26,7 @@ public final class IntakeConstants {
 
   // ---------------- Roller (吸球滚轮) ----------------
   /** Rollers voltage for intaking (volts). */
-  public static final double ROLLER_INTAKE_VOLTS = 5;
+  public static final double ROLLER_INTAKE_VOLTS = 8;
   /** Rollers voltage for stopping (volts). */
   public static final double ROLLER_STOP_VOLTS = 0.;
 
@@ -42,7 +42,7 @@ public final class IntakeConstants {
       edu.wpi.first.math.util.Units.degreesToRotations(40);
   /** Deploy position when deployed down for intaking (mechanism rotations). */
   public static final double DEPLOY_POS_DOWN_ROT =
-      edu.wpi.first.math.util.Units.degreesToRotations(-40);
+      edu.wpi.first.math.util.Units.degreesToRotations(-45);
 
   public static final double FLIP_POS_UP = edu.wpi.first.math.util.Units.degreesToRotations(0);
 
