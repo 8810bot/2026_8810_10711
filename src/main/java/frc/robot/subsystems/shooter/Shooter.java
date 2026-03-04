@@ -132,7 +132,7 @@ public class Shooter extends SubsystemBase {
   public double getFlywheelVelocityRps() {
     double v1 = inputs.flywheel1LeaderVelocityRotationPerSec;
     double v2 = inputs.flywheel2LeaderVelocityRotationPerSec;
-    return Math.min(v1, v2);
+    return Math.max(v1, v2);
   }
 
   /** Returns whether shooter IO is connected/healthy. */

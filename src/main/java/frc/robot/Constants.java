@@ -164,7 +164,7 @@ public final class Constants {
     public static final double EXIT_HOOD_DEG_TOL = 2.0;
 
     public static final double TRIGGER_AXIS_THRESHOLD = 0.25;
-    public static final double FEEDER_RPS = 24.0;
+    public static final double FEEDER_RPS = 30.0;
     public static final double INDEXER_VOLTS = 10.0;
 
     private MegaTrackIterativeCommandConstants() {}
@@ -714,58 +714,30 @@ public final class Constants {
     public static final double MAX_SHOOTING_VELOCITY = 3;
 
     static {
+      // Updated from shootmap.md (距离, 射手速度, hood角度, 飞行时间)
+      hoodAngleMap.put(1.405, 0.9);
+      hoodAngleMap.put(2.031, 2.1);
+      hoodAngleMap.put(2.725, 4.7);
+      hoodAngleMap.put(3.271, 7.5);
+      hoodAngleMap.put(3.705, 11.5);
+      hoodAngleMap.put(4.279, 13.);
+      hoodAngleMap.put(4.776, 17.7);
 
-      // hoodAngleMap.put(0.0, 0.0);
-      // hoodAngleMap.put(0.506, 5.0);
-      // hoodAngleMap.put(1.02, 10.0);
-      // hoodAngleMap.put(1.550, 15.0);
-      // hoodAngleMap.put(2.106, 20.0);
-      // hoodAngleMap.put(2.70, 25.);
-      // hoodAngleMap.put(3.34, 30.0);
-      // hoodAngleMap.put(4.05, 35.0);
-      // hoodAngleMap.put(4.85, 40.0);
-      // hoodAngleMap.put(5.787, 45.);
+      shooterSpeedMap.put(1.405, 22.3);
+      shooterSpeedMap.put(2.031, 23.1);
+      shooterSpeedMap.put(2.725, 25.);
+      shooterSpeedMap.put(3.271, 27.2);
+      shooterSpeedMap.put(3.705, 28.);
+      shooterSpeedMap.put(4.279, 29.1);
+      shooterSpeedMap.put(4.776, 30.3);
 
-      hoodAngleMap.put(1.610, 0.);
-      hoodAngleMap.put(1.959, 2.);
-      hoodAngleMap.put(2.397, 6.);
-      hoodAngleMap.put(3.026, 11.);
-      hoodAngleMap.put(3.435, 16.);
-      hoodAngleMap.put(3.996, 18.3);
-      hoodAngleMap.put(4.47, 22.);
-      hoodAngleMap.put(5.02, 25.);
-      // hoodAngleMap.put(2.983, 10.);
-      // hoodAngleMap.put(3.42, 12.);
-      // hoodAngleMap.put(4.08, 18.);
-      // hoodAngleMap.put(5.05, 18.);
-
-      shooterSpeedMap.put(1.610, 23.6);
-      shooterSpeedMap.put(1.959, 24.2);
-      shooterSpeedMap.put(2.397, 25.2);
-      shooterSpeedMap.put(3.026, 26.3);
-      shooterSpeedMap.put(3.435, 26.8);
-      shooterSpeedMap.put(3.996, 27.8);
-      shooterSpeedMap.put(4.47, 28.4);
-      shooterSpeedMap.put(5.02, 30.);
-      // shooterSpeedMap.put(2.65, 35.3);
-      // shooterSpeedMap.put(2.983, 36.8);
-      // shooterSpeedMap.put(3.42, 37.3);
-      // shooterSpeedMap.put(4.08, 37.);
-      // shooterSpeedMap.put(5.05, 45.8);
-
-      flightTimeMap.put(1.6, 1.0);
-      flightTimeMap.put(3.107, 1.1);
-
-      // shooterSpeedMap.put(0.0, 54.48);
-      // shooterSpeedMap.put(0.506, 54.69);
-      // shooterSpeedMap.put(1.02, 55.32);
-      // shooterSpeedMap.put(1.550, 56.40);
-      // shooterSpeedMap.put(2.106, 57.98);
-      // shooterSpeedMap.put(2.70, 60.117);
-      // shooterSpeedMap.put(3.34, 62.913);
-      // shooterSpeedMap.put(4.05, 66.513);
-      // shooterSpeedMap.put(4.85, 71.125);
-      // shooterSpeedMap.put(5.787, 77.053);
+      flightTimeMap.put(1.405, 0.9);
+      flightTimeMap.put(2.031, 0.95);
+      flightTimeMap.put(2.725, 1.0);
+      flightTimeMap.put(3.271, 1.15);
+      flightTimeMap.put(3.705, 1.17);
+      flightTimeMap.put(4.279, 1.25);
+      flightTimeMap.put(4.776, 1.30);
     }
   }
   /** Shooter CAN IDs and tuning. Update these to match your robot wiring & tuning. */
