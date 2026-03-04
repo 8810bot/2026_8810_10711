@@ -3,7 +3,7 @@ package frc.robot.subsystems.intake;
 import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
-import frc.robot.Constants;
+import frc.robot.constants.IntakeConstants;
 import org.littletonrobotics.junction.Logger;
 
 public class Intake extends SubsystemBase {
@@ -79,28 +79,28 @@ public class Intake extends SubsystemBase {
   private void applyWantedState() {
     switch (wantedState) {
       case DOWN_INTAKE -> {
-        deployPosRotSetpoint = Constants.IntakeConstants.DEPLOY_POS_DOWN_ROT;
-        rollerVoltsSetpoint = Constants.IntakeConstants.ROLLER_INTAKE_VOLTS;
+        deployPosRotSetpoint = IntakeConstants.DEPLOY_POS_DOWN_ROT;
+        rollerVoltsSetpoint = IntakeConstants.ROLLER_INTAKE_VOLTS;
       }
       case UP_STOW_STOP -> {
-        double baseUp = Constants.IntakeConstants.DEPLOY_POS_UP_ROT;
+        double baseUp = IntakeConstants.DEPLOY_POS_UP_ROT;
         deployPosRotSetpoint = baseUp;
-        rollerVoltsSetpoint = Constants.IntakeConstants.ROLLER_STOP_VOLTS;
+        rollerVoltsSetpoint = IntakeConstants.ROLLER_STOP_VOLTS;
       }
       case UP_DEBUG -> {
-        double baseUp = Constants.IntakeConstants.DEPLOY_POS_DEBUG_ROT;
+        double baseUp = IntakeConstants.DEPLOY_POS_DEBUG_ROT;
         deployPosRotSetpoint = baseUp;
-        rollerVoltsSetpoint = Constants.IntakeConstants.ROLLER_STOP_VOLTS;
+        rollerVoltsSetpoint = IntakeConstants.ROLLER_STOP_VOLTS;
       }
       case SHOT_LINKED_STOW -> {
-        double baseUp = Constants.IntakeConstants.DEPLOY_POS_UP_ROT;
+        double baseUp = IntakeConstants.DEPLOY_POS_UP_ROT;
         double extra =
             MathUtil.clamp(
-                shotCount * Constants.IntakeConstants.SHOOT_STOW_EXTRA_PER_SHOT_ROT,
-                Constants.IntakeConstants.SHOOT_STOW_EXTRA_MIN_ROT,
-                Constants.IntakeConstants.SHOOT_STOW_EXTRA_MAX_ROT);
+                shotCount * IntakeConstants.SHOOT_STOW_EXTRA_PER_SHOT_ROT,
+                IntakeConstants.SHOOT_STOW_EXTRA_MIN_ROT,
+                IntakeConstants.SHOOT_STOW_EXTRA_MAX_ROT);
         deployPosRotSetpoint = baseUp + extra;
-        rollerVoltsSetpoint = Constants.IntakeConstants.ROLLER_STOP_VOLTS;
+        rollerVoltsSetpoint = IntakeConstants.ROLLER_STOP_VOLTS;
 
         Logger.recordOutput("Intake/ShotLinkedStow/Shots", shotCount);
         Logger.recordOutput("Intake/ShotLinkedStow/ExtraRot", extra);
@@ -112,14 +112,14 @@ public class Intake extends SubsystemBase {
           nextFlickToggleTs =
               now
                   + (flickDownPhase
-                      ? Constants.IntakeConstants.FLICK_ON_SEC
-                      : Constants.IntakeConstants.FLICK_OFF_SEC);
+                      ? IntakeConstants.FLICK_ON_SEC
+                      : IntakeConstants.FLICK_OFF_SEC);
         }
         deployPosRotSetpoint =
             flickDownPhase
-                ? Constants.IntakeConstants.FLIP_POS_UP
-                : Constants.IntakeConstants.DEPLOY_POS_UP_ROT;
-        rollerVoltsSetpoint = Constants.IntakeConstants.FLICK_ROLLER_VOLTS;
+                ? IntakeConstants.FLIP_POS_UP
+                : IntakeConstants.DEPLOY_POS_UP_ROT;
+        rollerVoltsSetpoint = IntakeConstants.FLICK_ROLLER_VOLTS;
       }
     }
 

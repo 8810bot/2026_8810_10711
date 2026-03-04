@@ -1,4 +1,4 @@
-// Copyright 2021-2025 FRC 6328
+﻿// Copyright 2021-2025 FRC 6328
 // http://github.com/Mechanical-Advantage
 //
 // This program is free software; you can redistribute it and/or
@@ -13,7 +13,6 @@
 
 package frc.robot;
 
-import com.ctre.phoenix6.signals.MotorAlignmentValue;
 import com.therekrab.autopilot.APConstraints;
 import com.therekrab.autopilot.APProfile;
 import com.therekrab.autopilot.Autopilot;
@@ -50,7 +49,7 @@ public final class Constants {
   /** Tuning for trench traversal commands (SmashTrench, etc.). */
   public static final class TrenchCommandConstants {
     // ALIGN -> RUN transition tolerance
-    /** Lateral tolerance (meters) to enter RUN, measured ⟂ to approach direction. */
+    /** Lateral tolerance (meters) to enter RUN, measured 鉄?to approach direction. */
     public static final double ALIGN_LATERAL_TOL_METERS = 0.03;
     /** Along-line tolerance (meters) to enter RUN, measured along approach direction. */
     public static final double ALIGN_ALONG_TOL_METERS = 0.05;
@@ -181,86 +180,6 @@ public final class Constants {
     REPLAY
   }
 
-  /** Intake CAN IDs and tuning. Update these to match your robot wiring. */
-  public static final class IntakeConstants {
-    // CAN IDs
-    public static final int LEADER_MOTOR_ID = 22;
-    /** TODO: set to your deploy/arm motor CAN ID (收放电机). */
-    public static final int DEPLOY_MOTOR_ID = 23;
-
-    // Motor directions
-    public static final boolean LEADER_INVERTED = true;
-    public static final boolean DEPLOY_INVERTED = true;
-
-    // ---------------- Roller (吸球滚轮) ----------------
-    /** Rollers voltage for intaking (volts). */
-    public static final double ROLLER_INTAKE_VOLTS = 7;
-    /** Rollers voltage for stopping (volts). */
-    public static final double ROLLER_STOP_VOLTS = 0.;
-    // Current limits (amps)
-    public static final boolean ROLLER_ENABLE_SUPPLY_CURRENT_LIMIT = true;
-    public static final double ROLLER_SUPPLY_CURRENT_LIMIT_AMPS = 30.0;
-    public static final double ROLLER_SUPPLY_CURRENT_LOWER_LIMIT_AMPS = 30.0;
-    public static final double ROLLER_SUPPLY_CURRENT_LOWER_TIME_SEC = 1.0;
-    public static final boolean ROLLER_ENABLE_STATOR_CURRENT_LIMIT = true;
-    public static final double ROLLER_STATOR_CURRENT_LIMIT_AMPS = 80.0;
-
-    // ---------------- Deploy (收放摆臂) ----------------
-    /** Sensor-to-mechanism ratio for deploy motor (motor rotations per mechanism rotation). */
-    public static final double DEPLOY_SENSOR_TO_MECH_RATIO = 48.39;
-
-    /** Deploy position when stowed (mechanism rotations). TODO tune. */
-    public static final double DEPLOY_POS_UP_ROT =
-        edu.wpi.first.math.util.Units.degreesToRotations(28);
-
-    public static final double DEPLOY_POS_DEBUG_ROT =
-        edu.wpi.first.math.util.Units.degreesToRotations(30);
-    /** Deploy position when deployed down (mechanism rotations). TODO tune. */
-    public static final double DEPLOY_POS_DOWN_ROT =
-        edu.wpi.first.math.util.Units.degreesToRotations(0);
-
-    public static final double FLIP_POS_UP = edu.wpi.first.math.util.Units.degreesToRotations(0);
-
-    // Motion Magic (mechanism rotations/sec and rotations/sec^2)
-    public static final double DEPLOY_MM_CRUISE_VELOCITY = 1.2;
-    public static final double DEPLOY_MM_ACCELERATION = 9.6;
-    public static final double DEPLOY_MM_JERK = 0.0;
-
-    // Slot0 gains for MotionMagicTorqueCurrentFOC
-    public static final double DEPLOY_KP = 1000;
-    public static final double DEPLOY_KI = 0.0;
-    public static final double DEPLOY_KD = 175;
-    public static final double DEPLOY_KS = 0.0;
-    public static final double DEPLOY_KG = 9;
-    public static final double DEPLOY_KV = 0.0;
-    public static final double DEPLOY_KA = 0.0;
-
-    public static final double DEPLOY_PEAK_TORQUECURRENT_FORWARD = 120;
-    public static final double DEPLOY_PEAK_TORQUECURRENT_REVERSE = -60;
-
-    // Flick/backfeed behavior (间歇性收放拨球) - simple oscillation
-    public static final double FLICK_ON_SEC = 0.6;
-    public static final double FLICK_OFF_SEC = 0.6;
-    /** In flick mode, rollers voltage (volts). TODO tune (can be 0 or slight reverse). */
-    public static final double FLICK_ROLLER_VOLTS = 0.0;
-
-    // Shot-linked stow (射球时：根据射球数量“越收越回”)
-    /**
-     * Extra stow amount per shot (mechanism rotations/shot).
-     *
-     * <p>Sign depends on your mechanism. If "more stowed" is a smaller rotation, use negative.
-     */
-    public static final double SHOOT_STOW_EXTRA_PER_SHOT_ROT =
-        edu.wpi.first.math.util.Units.degreesToRotations(1.7);
-    /** Clamp the total extra stow (mechanism rotations). */
-    public static final double SHOOT_STOW_EXTRA_MIN_ROT = -0.2;
-
-    public static final double SHOOT_STOW_EXTRA_MAX_ROT =
-        edu.wpi.first.math.util.Units.degreesToRotations(45);
-
-    private IntakeConstants() {}
-  }
-
   public static final class FieldConstants {
     public static final double HUB_HEIGHT_METERS = 2.64;
     public static final Translation2d RED_HUB_LOCATION = new Translation2d(11.917, 4.030);
@@ -276,7 +195,7 @@ public final class Constants {
     /**
      * Standoff distance before the trench along the chosen approach line.
      *
-     * <p>This is the "坡前指定位置" distance.
+     * <p>This is the "鍧″墠鎸囧畾浣嶇疆" distance.
      */
     public static final double TRENCH_PRE_DISTANCE_METERS = 1.20;
 
@@ -392,7 +311,7 @@ public final class Constants {
 
     /**
      * 8 approach reference lines: for each trench, we provide two approach directions normal to the
-     * trench axis (axis +90 and axis -90). This matches the "8 条预瞄参考线" idea.
+     * trench axis (axis +90 and axis -90). This matches the "8 鏉￠鐬勫弬鑰冪嚎" idea.
      *
      * <p>IMPORTANT: Segment direction = trench axis; Pose heading = approach direction.
      */
@@ -445,7 +364,7 @@ public final class Constants {
      * <ul>
      *   <li>Pick the line with smallest perpendicular distance to the robot translation
      *   <li>Tie-breaker prefers the line where the robot is \"behind\" the trench center relative
-     *       to the line direction (so the pre-pose is reachable without flipping 180°)
+     *       to the line direction (so the pre-pose is reachable without flipping 180掳)
      * </ul>
      */
     public static Pose2d getNearestTrenchPrePose(Pose2d robotPose) {
@@ -482,7 +401,7 @@ public final class Constants {
         return robotPose;
       }
 
-      // Keep translation on the chosen line, but snap the traverse heading to a 90° multiple.
+      // Keep translation on the chosen line, but snap the traverse heading to a 90掳 multiple.
       Translation2d u = best.dirUnit();
       Translation2d prePoint = bestClosest.minus(u.times(TRENCH_PRE_DISTANCE_METERS));
       return new Pose2d(prePoint, snapTo90Deg(best.approachHeading()));
@@ -597,7 +516,7 @@ public final class Constants {
     /**
      * Returns the best "pre-bump" alignment pose by snapping to the nearest bump approach segment.
      *
-     * <p>NO 90° heading snap. Returned pose rotation equals chosen approach heading.
+     * <p>NO 90掳 heading snap. Returned pose rotation equals chosen approach heading.
      */
     public static Pose2d getNearestBumpPrePose(Pose2d robotPose) {
       Translation2d p = robotPose.getTranslation();
@@ -714,7 +633,7 @@ public final class Constants {
     public static final double MAX_SHOOTING_VELOCITY = 3;
 
     static {
-      // Updated from shootmap.md (距离, 射手速度, hood角度, 飞行时间)
+      // Updated from shootmap.md (璺濈, 灏勬墜閫熷害, hood瑙掑害, 椋炶鏃堕棿)
       hoodAngleMap.put(1.405, 0.9);
       hoodAngleMap.put(2.031, 2.1);
       hoodAngleMap.put(2.725, 4.7);
@@ -740,227 +659,8 @@ public final class Constants {
       flightTimeMap.put(4.776, 1.30);
     }
   }
-  /** Shooter CAN IDs and tuning. Update these to match your robot wiring & tuning. */
-  public static final class ShooterConstants {
-    // CAN IDs
-    public static final int FLYWHEEL_1_LEADER_ID = 13;
-    public static final int FLYWHEEL_1_FOLLOWER_ID = 14;
-    public static final int FLYWHEEL_2_LEADER_ID = 15;
-    public static final int FLYWHEEL_2_FOLLOWER_ID = 16;
 
-    // Motor directions
-    public static final boolean FLYWHEEL_LEADER_INVERTED = false;
-
-    public static final MotorAlignmentValue FLYWHEEL_1_FOLLOWER_INVERTED =
-        MotorAlignmentValue.Aligned;
-    public static final MotorAlignmentValue FLYWHEEL_2_FOLLOWER_INVERTED =
-        MotorAlignmentValue.Aligned;
-
-    // Gear ratios (motor rotations per mechanism rotation)
-    public static final double FLYWHEEL_SENSOR_TO_MECH_RATIO = 30. / 24.;
-
-    /** Flywheel/exit location relative to robot center (meters). +X forward, +Y left. */
-    public static final double FLYWHEEL_OFFSET_X_METERS = -0.15;
-
-    public static final double FLYWHEEL_OFFSET_Y_METERS = 0.0;
-
-    // Flywheel closed-loop gains (Phoenix Slot0)
-    // Shooter 1
-    public static final double FLYWHEEL_1_KP = 15;
-    public static final double FLYWHEEL_1_KI = 0.0;
-    public static final double FLYWHEEL_1_KD = 0.0;
-    public static final double FLYWHEEL_1_KV = 0.34;
-    public static final double FLYWHEEL_1_KS = 12;
-
-    // Shooter 2 (default same as shooter 1; tune independently)
-    public static final double FLYWHEEL_2_KP = 15;
-    public static final double FLYWHEEL_2_KI = 0.0;
-    public static final double FLYWHEEL_2_KD = 0.0;
-    public static final double FLYWHEEL_2_KV = 0.34;
-    public static final double FLYWHEEL_2_KS = 12;
-
-    // Current limits (amps). Tune to protect wiring/breakers.
-    public static final boolean ENABLE_SUPPLY_CURRENT_LIMIT = true;
-    public static final double SUPPLY_CURRENT_LIMIT_AMPS = 40.0;
-    public static final double SUPPLY_CURRENT_LOWER_LIMIT_AMPS = 40.0;
-    public static final double SUPPLY_CURRENT_LOWER_TIME_SEC = 1.0;
-
-    public static final boolean ENABLE_STATOR_CURRENT_LIMIT = true;
-    public static final double STATOR_CURRENT_LIMIT_AMPS = 60.0;
-
-    // Shot counting (based on flywheel current drop)
-    /** If max(leader,follower) stator current is below this, treat as "low current". Tune. */
-    public static final double SHOT_COUNT_LOW_CURRENT_THRESHOLD_AMPS = 30.0;
-    /** Low-current debounce time (sec). */
-    public static final double SHOT_COUNT_DEBOUNCE_SEC = 0.005;
-    /** Only count shots when setpoint is above this (RPS), to avoid counting at idle. */
-    public static final double SHOT_COUNT_MIN_SETPOINT_RPS = 5.0;
-
-    private ShooterConstants() {}
-  }
-
-  /** Shared hood (angle adjustment) constants. Used by {@code Hood} subsystem. */
-  public static final class HoodConstants {
-    // CAN IDs
-    public static final int MOTOR_ID = 21;
-
-    // Motor direction
-    public static final boolean INVERTED = true;
-
-    // Gear ratio (motor rotations per mechanism rotation)
-    public static final double SENSOR_TO_MECH_RATIO = 160. / 9. * 34. / 20. * 26. / 12.;
-
-    // Motion Magic (mechanism rotations/sec and rotations/sec^2)
-    public static final double MM_CRUISE_VELOCITY = 0.5;
-    public static final double MM_ACCELERATION = 1.0;
-    public static final double MM_JERK = 0.0;
-
-    // Closed-loop gains (Phoenix Slot0)
-    public static final double KP = 2300;
-    public static final double KI = 0.0;
-    public static final double KD = 230.0;
-    public static final double KS = 0.0;
-    public static final double KG = 2.0;
-    public static final double KV = 0.0;
-    public static final double KA = 0.0;
-
-    private HoodConstants() {}
-  }
-
-  /** Hopper detection constants (two CANrange sensors). */
-  public static final class HopperConstants {
-    /** TODO: set to your CANrange sensor IDs. */
-    public static final int CANRANGE_1_ID = 0;
-
-    public static final int CANRANGE_2_ID = 0;
-
-    /** Distance threshold (meters) for "piece present". Tune on your robot. */
-    public static final double DETECTION_DISTANCE_METERS = 0.25;
-
-    /** Debounce time (sec) for declaring hopper full / not full. */
-    public static final double FULL_DEBOUNCE_SEC = 0.10;
-
-    private HopperConstants() {}
-  }
-
-  /** LED (CANdle) constants. */
-  public static final class LEDConstants {
-    /** TODO: set to your CANdle CAN ID. */
-    public static final int CANDLE_ID = 0;
-
-    /** Indices 0-7 onboard, 8-399 strip. Tune to your wiring. */
-    public static final int LED_START_INDEX = 8;
-
-    public static final int LED_END_INDEX = 399;
-
-    private LEDConstants() {}
-  }
-
-  /**
-   * Drivetrain torque-current deadband tuning (applies when
-   * DriveMotorClosedLoopOutput=TorqueCurrentFOC).
-   */
-  public static final class DrivetrainConstants {
-    /**
-     * Deadband for torque-current requests (same units as {@code TorqueCurrentFOC.withOutput},
-     * amps).
-     */
-    public static final double TORQUE_CURRENT_DEADBAND_AMPS = 0.0;
-
-    // --- Tilt detection ---
-    /** Angle threshold (deg) to declare robot is tilted. */
-    public static final double TILT_TRIP_DEG = 4.0;
-    /** Angle threshold (deg) to clear tilted state (hysteresis). */
-    public static final double TILT_CLEAR_DEG = 2.0;
-    /** Debounce time (sec) for declaring tilted. */
-    public static final double TILT_TRIP_DEBOUNCE_SEC = 0.10;
-    /** Debounce time (sec) for clearing tilted. */
-    public static final double TILT_CLEAR_DEBOUNCE_SEC = 0.10;
-
-    private DrivetrainConstants() {}
-  }
-
-  /** Feeder CAN IDs and tuning. Update these to match your robot wiring & tuning. */
-  public static final class FeederConstants {
-    // CAN IDs
-    public static final int MOTOR_1_ID = 17;
-    public static final int FOLLOWER_1_ID = 18;
-    /** TODO: set to your second feeder leader CAN ID. */
-    // public static final int MOTOR_2_ID = 0;
-    // /** TODO: set to your second feeder follower CAN ID. */
-    // public static final int FOLLOWER_2_ID = 0;
-    // Motor direction
-    public static final boolean INVERTED = false;
-    /** Feeder follower alignment relative to leader. Use Opposed to run opposite direction. */
-    public static final MotorAlignmentValue FOLLOWER_1_ALIGNMENT = MotorAlignmentValue.Opposed;
-
-    public static final MotorAlignmentValue FOLLOWER_2_ALIGNMENT = MotorAlignmentValue.Opposed;
-
-    // Gear ratio (motor rotations per mechanism rotation)
-    public static final double SENSOR_TO_MECH_RATIO = 1.0;
-
-    // Velocity closed-loop gains (Phoenix Slot0)
-    public static final double KP = 12.0;
-    public static final double KI = 0.0;
-    public static final double KD = 0.0;
-    public static final double KV = 0.;
-    public static final double KS = 5;
-
-    // Current limits (amps)
-    public static final boolean ENABLE_SUPPLY_CURRENT_LIMIT = true;
-    public static final double SUPPLY_CURRENT_LIMIT_AMPS = 30.0;
-    public static final double SUPPLY_CURRENT_LOWER_LIMIT_AMPS = 30.0;
-    public static final double SUPPLY_CURRENT_LOWER_TIME_SEC = 1.0;
-
-    public static final boolean ENABLE_STATOR_CURRENT_LIMIT = true;
-    public static final double STATOR_CURRENT_LIMIT_AMPS = 50.0;
-
-    /** Default command slow reverse speed (RPS). Tune. */
-    public static final double DEFAULT_REVERSE_RPS = 0.0;
-
-    private FeederConstants() {}
-  }
-
-  /** Feeder/indexer unjam tuning. */
-  public static final class FeederUnjamConstants {
-    /** Normal feed speeds. */
-    public static final double NORMAL_FEEDER_RPS = 24.0;
-    public static final double NORMAL_INDEXER_VOLTS = 8.0;
-
-    /** Reverse speeds for unjamming (lower power). */
-    public static final double UNJAM_FEEDER_RPS = -6.0;
-    public static final double UNJAM_INDEXER_VOLTS = -3.0;
-
-    /** Feeder current threshold (amps) to detect a jam. */
-    public static final double JAM_CURRENT_THRESHOLD_AMPS = 35.0;
-    /** Debounce time (sec) for jam detection. */
-    public static final double JAM_DEBOUNCE_SEC = 0.15;
-    /** Reverse duration (sec) when unjamming. */
-    public static final double UNJAM_TIME_SEC = 0.25;
-
-    private FeederUnjamConstants() {}
-  }
-
-  /** Indexer CAN IDs and tuning. Update these to match your robot wiring & tuning. */
-  public static final class IndexerConstants {
-    public static final int MOTOR_1_ID = 19;
-    /** TODO: set to your second indexer CAN ID. */
-    public static final int MOTOR_2_ID = 20;
-
-    public static final boolean INVERTED = true;
-
-    // Current limits (amps)
-    public static final boolean ENABLE_SUPPLY_CURRENT_LIMIT = true;
-    public static final double SUPPLY_CURRENT_LIMIT_AMPS = 70.0;
-    public static final double SUPPLY_CURRENT_LOWER_LIMIT_AMPS = 70.0;
-    public static final double SUPPLY_CURRENT_LOWER_TIME_SEC = 0.1;
-
-    public static final boolean ENABLE_STATOR_CURRENT_LIMIT = true;
-    public static final double STATOR_CURRENT_LIMIT_AMPS = 120.0;
-
-    /** Default command slow reverse voltage (volts). Tune. */
-    public static final double DEFAULT_REVERSE_VOLTS = 0.0;
-
-    private IndexerConstants() {}
-  }
 }
+
+
+

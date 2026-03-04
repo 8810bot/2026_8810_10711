@@ -10,6 +10,7 @@ import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.DriverStation.Alliance;
 import edu.wpi.first.wpilibj2.command.Command;
 import frc.robot.Constants;
+import frc.robot.constants.ShooterConstants;
 import frc.robot.Constants.AutoShootConstants;
 import frc.robot.RobotContainer;
 import frc.robot.subsystems.intake.Intake.WantedState;
@@ -63,8 +64,8 @@ public class MegaTrackCommand extends Command {
     var pose = drive.getPose();
     Translation2d offsetRobot =
         new Translation2d(
-            Constants.ShooterConstants.FLYWHEEL_OFFSET_X_METERS,
-            Constants.ShooterConstants.FLYWHEEL_OFFSET_Y_METERS);
+            ShooterConstants.FLYWHEEL_OFFSET_X_METERS,
+            ShooterConstants.FLYWHEEL_OFFSET_Y_METERS);
     Translation2d offsetField = offsetRobot.rotateBy(pose.getRotation());
     return pose.getTranslation().plus(offsetField);
   }

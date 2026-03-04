@@ -16,7 +16,7 @@ import edu.wpi.first.units.measure.Angle;
 import edu.wpi.first.units.measure.AngularVelocity;
 import edu.wpi.first.units.measure.Current;
 import edu.wpi.first.units.measure.Voltage;
-import frc.robot.Constants;
+import frc.robot.constants.IntakeConstants;
 
 public class IntakeIOTalonFX implements IntakeIO {
   // Roller motors
@@ -41,57 +41,57 @@ public class IntakeIOTalonFX implements IntakeIO {
   private final StatusSignal<Current> deployCurrent;
 
   public IntakeIOTalonFX() {
-    leader = new TalonFX(Constants.IntakeConstants.LEADER_MOTOR_ID, "mainCAN");
-    deploy = new TalonFX(Constants.IntakeConstants.DEPLOY_MOTOR_ID, "mainCAN");
+    leader = new TalonFX(IntakeConstants.LEADER_MOTOR_ID, "mainCAN");
+    deploy = new TalonFX(IntakeConstants.DEPLOY_MOTOR_ID, "mainCAN");
 
     // ---------------- Roller config ----------------
     var rollerLeaderCfg = new TalonFXConfiguration();
     rollerLeaderCfg.MotorOutput.NeutralMode = NeutralModeValue.Coast;
     rollerLeaderCfg.MotorOutput.Inverted =
-        Constants.IntakeConstants.LEADER_INVERTED
+        IntakeConstants.LEADER_INVERTED
             ? InvertedValue.Clockwise_Positive
             : InvertedValue.CounterClockwise_Positive;
     rollerLeaderCfg.CurrentLimits.SupplyCurrentLimitEnable =
-        Constants.IntakeConstants.ROLLER_ENABLE_SUPPLY_CURRENT_LIMIT;
+        IntakeConstants.ROLLER_ENABLE_SUPPLY_CURRENT_LIMIT;
     rollerLeaderCfg.CurrentLimits.SupplyCurrentLimit =
-        Constants.IntakeConstants.ROLLER_SUPPLY_CURRENT_LIMIT_AMPS;
+        IntakeConstants.ROLLER_SUPPLY_CURRENT_LIMIT_AMPS;
     rollerLeaderCfg.CurrentLimits.SupplyCurrentLowerLimit =
-        Constants.IntakeConstants.ROLLER_SUPPLY_CURRENT_LOWER_LIMIT_AMPS;
+        IntakeConstants.ROLLER_SUPPLY_CURRENT_LOWER_LIMIT_AMPS;
     rollerLeaderCfg.CurrentLimits.SupplyCurrentLowerTime =
-        Constants.IntakeConstants.ROLLER_SUPPLY_CURRENT_LOWER_TIME_SEC;
+        IntakeConstants.ROLLER_SUPPLY_CURRENT_LOWER_TIME_SEC;
     rollerLeaderCfg.CurrentLimits.StatorCurrentLimitEnable =
-        Constants.IntakeConstants.ROLLER_ENABLE_STATOR_CURRENT_LIMIT;
+        IntakeConstants.ROLLER_ENABLE_STATOR_CURRENT_LIMIT;
     rollerLeaderCfg.CurrentLimits.StatorCurrentLimit =
-        Constants.IntakeConstants.ROLLER_STATOR_CURRENT_LIMIT_AMPS;
+        IntakeConstants.ROLLER_STATOR_CURRENT_LIMIT_AMPS;
     leader.getConfigurator().apply(rollerLeaderCfg);
 
     // ---------------- Deploy config (Motion Magic + TorqueCurrentFOC) ----------------
     var deployCfg = new TalonFXConfiguration();
     deployCfg.MotorOutput.NeutralMode = NeutralModeValue.Brake;
     deployCfg.MotorOutput.Inverted =
-        Constants.IntakeConstants.DEPLOY_INVERTED
+        IntakeConstants.DEPLOY_INVERTED
             ? InvertedValue.Clockwise_Positive
             : InvertedValue.CounterClockwise_Positive;
     deployCfg.Feedback.SensorToMechanismRatio =
-        Constants.IntakeConstants.DEPLOY_SENSOR_TO_MECH_RATIO;
+        IntakeConstants.DEPLOY_SENSOR_TO_MECH_RATIO;
     deployCfg.Slot0 =
         new Slot0Configs()
-            .withKP(Constants.IntakeConstants.DEPLOY_KP)
-            .withKI(Constants.IntakeConstants.DEPLOY_KI)
-            .withKD(Constants.IntakeConstants.DEPLOY_KD)
-            .withKS(Constants.IntakeConstants.DEPLOY_KS)
-            .withKV(Constants.IntakeConstants.DEPLOY_KV)
-            .withKA(Constants.IntakeConstants.DEPLOY_KA)
-            .withKG(Constants.IntakeConstants.DEPLOY_KG);
+            .withKP(IntakeConstants.DEPLOY_KP)
+            .withKI(IntakeConstants.DEPLOY_KI)
+            .withKD(IntakeConstants.DEPLOY_KD)
+            .withKS(IntakeConstants.DEPLOY_KS)
+            .withKV(IntakeConstants.DEPLOY_KV)
+            .withKA(IntakeConstants.DEPLOY_KA)
+            .withKG(IntakeConstants.DEPLOY_KG);
     deployCfg.MotionMagic =
         new MotionMagicConfigs()
-            .withMotionMagicCruiseVelocity(Constants.IntakeConstants.DEPLOY_MM_CRUISE_VELOCITY)
-            .withMotionMagicAcceleration(Constants.IntakeConstants.DEPLOY_MM_ACCELERATION)
-            .withMotionMagicJerk(Constants.IntakeConstants.DEPLOY_MM_JERK);
+            .withMotionMagicCruiseVelocity(IntakeConstants.DEPLOY_MM_CRUISE_VELOCITY)
+            .withMotionMagicAcceleration(IntakeConstants.DEPLOY_MM_ACCELERATION)
+            .withMotionMagicJerk(IntakeConstants.DEPLOY_MM_JERK);
     deployCfg.TorqueCurrent.PeakForwardTorqueCurrent =
-        Constants.IntakeConstants.DEPLOY_PEAK_TORQUECURRENT_FORWARD;
+        IntakeConstants.DEPLOY_PEAK_TORQUECURRENT_FORWARD;
     deployCfg.TorqueCurrent.PeakReverseTorqueCurrent =
-        Constants.IntakeConstants.DEPLOY_PEAK_TORQUECURRENT_REVERSE;
+        IntakeConstants.DEPLOY_PEAK_TORQUECURRENT_REVERSE;
     deploy.getConfigurator().apply(deployCfg);
     // TODO: if you have an absolute reference / homing routine, do NOT blindly zero here.
     deploy.setPosition(0);

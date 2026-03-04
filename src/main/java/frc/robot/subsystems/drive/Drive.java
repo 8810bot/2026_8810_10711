@@ -52,6 +52,7 @@ import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 import frc.robot.Constants;
 import frc.robot.Constants.Mode;
+import frc.robot.constants.DrivetrainConstants;
 import frc.robot.generated.TunerConstants;
 import frc.robot.util.LimelightHelpers;
 import frc.robot.util.LocalADStarAK;
@@ -122,10 +123,10 @@ public class Drive extends SubsystemBase {
   // --- Tilt detection (pitch/roll) ---
   private final Debouncer tiltTripDebouncer =
       new Debouncer(
-          Constants.DrivetrainConstants.TILT_TRIP_DEBOUNCE_SEC, Debouncer.DebounceType.kRising);
+          DrivetrainConstants.TILT_TRIP_DEBOUNCE_SEC, Debouncer.DebounceType.kRising);
   private final Debouncer tiltClearDebouncer =
       new Debouncer(
-          Constants.DrivetrainConstants.TILT_CLEAR_DEBOUNCE_SEC, Debouncer.DebounceType.kRising);
+          DrivetrainConstants.TILT_CLEAR_DEBOUNCE_SEC, Debouncer.DebounceType.kRising);
   private boolean isTilted = false;
 
   private SwerveDriveKinematics kinematics = new SwerveDriveKinematics(getModuleTranslations());
@@ -368,12 +369,12 @@ public class Drive extends SubsystemBase {
     double tiltDeg = Math.toDegrees(tiltRad);
 
     if (!isTilted) {
-      if (tiltTripDebouncer.calculate(tiltDeg >= Constants.DrivetrainConstants.TILT_TRIP_DEG)) {
+      if (tiltTripDebouncer.calculate(tiltDeg >= DrivetrainConstants.TILT_TRIP_DEG)) {
         isTilted = true;
         tiltClearDebouncer.calculate(false);
       }
     } else {
-      if (tiltClearDebouncer.calculate(tiltDeg <= Constants.DrivetrainConstants.TILT_CLEAR_DEG)) {
+      if (tiltClearDebouncer.calculate(tiltDeg <= DrivetrainConstants.TILT_CLEAR_DEG)) {
         isTilted = false;
         tiltTripDebouncer.calculate(false);
       }

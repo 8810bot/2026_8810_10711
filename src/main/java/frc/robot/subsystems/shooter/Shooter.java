@@ -3,7 +3,7 @@ package frc.robot.subsystems.shooter;
 
 import edu.wpi.first.math.filter.Debouncer;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
-import frc.robot.Constants;
+import frc.robot.constants.ShooterConstants;
 import org.littletonrobotics.junction.Logger;
 
 /** Subsystem for dual shooter flywheels. Hood is in {@link frc.robot.subsystems.hood.Hood}. */
@@ -17,10 +17,10 @@ public class Shooter extends SubsystemBase {
   // Shot counting (per shooter)
   private final Debouncer shot1Debouncer =
       new Debouncer(
-          Constants.ShooterConstants.SHOT_COUNT_DEBOUNCE_SEC, Debouncer.DebounceType.kRising);
+          ShooterConstants.SHOT_COUNT_DEBOUNCE_SEC, Debouncer.DebounceType.kRising);
   private final Debouncer shot2Debouncer =
       new Debouncer(
-          Constants.ShooterConstants.SHOT_COUNT_DEBOUNCE_SEC, Debouncer.DebounceType.kRising);
+          ShooterConstants.SHOT_COUNT_DEBOUNCE_SEC, Debouncer.DebounceType.kRising);
 
   private boolean lastShot1Debounced = false;
   private boolean lastShot2Debounced = false;
@@ -45,7 +45,7 @@ public class Shooter extends SubsystemBase {
 
   private void updateShotCounting() {
     // Arm only when commanded to spin (avoid counting while idle)
-    boolean armed = flywheelSetpointRPS >= Constants.ShooterConstants.SHOT_COUNT_MIN_SETPOINT_RPS;
+    boolean armed = flywheelSetpointRPS >= ShooterConstants.SHOT_COUNT_MIN_SETPOINT_RPS;
 
     if (!armed) {
       // Reset debouncers/edges while not armed
@@ -59,8 +59,8 @@ public class Shooter extends SubsystemBase {
     double cur1 = Math.max(inputs.flywheel1LeaderCurrentAmps, inputs.flywheel1FollowerCurrentAmps);
     double cur2 = Math.max(inputs.flywheel2LeaderCurrentAmps, inputs.flywheel2FollowerCurrentAmps);
 
-    boolean low1Raw = cur1 >= Constants.ShooterConstants.SHOT_COUNT_LOW_CURRENT_THRESHOLD_AMPS;
-    boolean low2Raw = cur2 >= Constants.ShooterConstants.SHOT_COUNT_LOW_CURRENT_THRESHOLD_AMPS;
+    boolean low1Raw = cur1 >= ShooterConstants.SHOT_COUNT_LOW_CURRENT_THRESHOLD_AMPS;
+    boolean low2Raw = cur2 >= ShooterConstants.SHOT_COUNT_LOW_CURRENT_THRESHOLD_AMPS;
 
     boolean low1Debounced = shot1Debouncer.calculate(low1Raw);
     boolean low2Debounced = shot2Debouncer.calculate(low2Raw);
@@ -97,6 +97,28 @@ public class Shooter extends SubsystemBase {
     flywheelSetpointRPS = rps;
     flywheelAccelSetpointRpsPerSec = accelRpsPerSec;
     io.setFlywheelVelocity(rps, accelRpsPerSec);
+  }
+
+  /** Sets both flywheels with acceleration and torque-current feedforward (RPS, RPS/s, amps). */
+  public void setVelocity(double rps, double accelRpsPerSec, double torqueCurrentAmps) {
+    flywheelSetpointRPS = rps;
+    flywheelAccelSetpointRpsPerSec = accelRpsPerSec;
+    io.setFlywheelVelocity(rps, accelRpsPerSec, torqueCurrentAmps);
+  }
+
+  /** Updates the setpoint for logging/shot counting without commanding outputs. */
+  public void setFlywheelSetpointRps(double rps) {
+    flywheelSetpointRPS = rps;
+  }
+
+  /** Commands torque-current control for both flywheels (amps). */
+  public void setTorqueCurrent(double amps) {
+    io.setFlywheelTorqueCurrent(amps);
+  }
+
+  /** Commands duty-cycle control for both flywheels (-1.0 to 1.0). */
+  public void setDutyCycle(double dutyCycle) {
+    io.setFlywheelDutyCycle(dutyCycle);
   }
 
   public void stop() {

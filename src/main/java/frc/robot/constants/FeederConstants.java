@@ -53,5 +53,25 @@ public final class FeederConstants {
   /** Default command slow reverse speed (RPS). Tune. */
   public static final double DEFAULT_REVERSE_RPS = 0.0;
 
+  /** Feeder/indexer unjam tuning. */
+  public static final class UnjamConstants {
+    /** Normal feed speeds. */
+    public static final double NORMAL_FEEDER_RPS = 24.0;
+    public static final double NORMAL_INDEXER_VOLTS = 8.0;
+
+    /** Reverse speeds for unjamming (lower power). */
+    public static final double UNJAM_FEEDER_RPS = -6.0;
+    public static final double UNJAM_INDEXER_VOLTS = -3.0;
+
+    /** Feeder current threshold (amps) to detect a jam. */
+    public static final double JAM_CURRENT_THRESHOLD_AMPS = 35.0;
+    /** Debounce time (sec) for jam detection. */
+    public static final double JAM_DEBOUNCE_SEC = 0.15;
+    /** Reverse duration (sec) when unjamming. */
+    public static final double UNJAM_TIME_SEC = 0.25;
+
+    private UnjamConstants() {}
+  }
+
   private FeederConstants() {}
 }

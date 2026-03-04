@@ -3,7 +3,7 @@ package frc.robot.commands;
 import edu.wpi.first.math.filter.Debouncer;
 import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj2.command.Command;
-import frc.robot.Constants;
+import frc.robot.constants.FeederConstants.UnjamConstants;
 import frc.robot.subsystems.feeder.Feeder;
 import frc.robot.subsystems.indexer.Indexer;
 
@@ -32,7 +32,7 @@ public class FeederUnjamCommand extends Command {
     unjamStartSec = Double.NaN;
     jamDebouncer =
         new Debouncer(
-            Constants.FeederUnjamConstants.JAM_DEBOUNCE_SEC, Debouncer.DebounceType.kRising);
+            UnjamConstants.JAM_DEBOUNCE_SEC, Debouncer.DebounceType.kRising);
   }
 
   @Override
@@ -40,7 +40,7 @@ public class FeederUnjamCommand extends Command {
     boolean jamDetected =
         jamDebouncer.calculate(
             feeder.getCurrentAmps()
-                > Constants.FeederUnjamConstants.JAM_CURRENT_THRESHOLD_AMPS);
+                > UnjamConstants.JAM_CURRENT_THRESHOLD_AMPS);
 
     if (state == State.NORMAL) {
       if (jamDetected) {
@@ -68,16 +68,16 @@ public class FeederUnjamCommand extends Command {
   }
 
   private void runNormal() {
-    feeder.setVelocity(Constants.FeederUnjamConstants.NORMAL_FEEDER_RPS);
-    indexer.setVoltage(Constants.FeederUnjamConstants.NORMAL_INDEXER_VOLTS);
+    feeder.setVelocity(UnjamConstants.NORMAL_FEEDER_RPS);
+    indexer.setVoltage(UnjamConstants.NORMAL_INDEXER_VOLTS);
   }
 
   private void runUnjam() {
-    feeder.setVelocity(Constants.FeederUnjamConstants.UNJAM_FEEDER_RPS);
-    indexer.setVoltage(Constants.FeederUnjamConstants.UNJAM_INDEXER_VOLTS);
+    feeder.setVelocity(UnjamConstants.UNJAM_FEEDER_RPS);
+    indexer.setVoltage(UnjamConstants.UNJAM_INDEXER_VOLTS);
 
     double elapsed = Timer.getFPGATimestamp() - unjamStartSec;
-    if (elapsed >= Constants.FeederUnjamConstants.UNJAM_TIME_SEC) {
+    if (elapsed >= UnjamConstants.UNJAM_TIME_SEC) {
       state = State.NORMAL;
     }
   }

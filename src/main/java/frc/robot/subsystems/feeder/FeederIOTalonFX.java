@@ -14,7 +14,7 @@ import edu.wpi.first.math.util.Units;
 import edu.wpi.first.units.measure.AngularVelocity;
 import edu.wpi.first.units.measure.Current;
 import edu.wpi.first.units.measure.Voltage;
-import frc.robot.Constants.FeederConstants;
+import frc.robot.constants.FeederConstants;
 
 /** TalonFX implementation for dual feeders. */
 public class FeederIOTalonFX implements FeederIO {

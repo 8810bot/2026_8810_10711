@@ -5,7 +5,9 @@ import com.ctre.phoenix6.BaseStatusSignal;
 import com.ctre.phoenix6.StatusSignal;
 import com.ctre.phoenix6.configs.Slot0Configs;
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
+import com.ctre.phoenix6.controls.DutyCycleOut;
 import com.ctre.phoenix6.controls.Follower;
+import com.ctre.phoenix6.controls.TorqueCurrentFOC;
 import com.ctre.phoenix6.controls.VelocityTorqueCurrentFOC;
 import com.ctre.phoenix6.hardware.TalonFX;
 import com.ctre.phoenix6.signals.InvertedValue;
@@ -13,7 +15,7 @@ import com.ctre.phoenix6.signals.NeutralModeValue;
 import edu.wpi.first.units.measure.AngularVelocity;
 import edu.wpi.first.units.measure.Current;
 import edu.wpi.first.units.measure.Voltage;
-import frc.robot.Constants.ShooterConstants;
+import frc.robot.constants.ShooterConstants;
 
 /** TalonFX implementation for dual shooter flywheels. */
 public class ShooterIOTalonFX implements ShooterIO {
@@ -21,12 +23,16 @@ public class ShooterIOTalonFX implements ShooterIO {
   private final TalonFX flywheel1Leader;
   private final TalonFX flywheel1Follower;
   private final VelocityTorqueCurrentFOC flywheel1VelocityReq = new VelocityTorqueCurrentFOC(0.0);
+  private final TorqueCurrentFOC flywheel1TorqueReq = new TorqueCurrentFOC(0.0);
+  private final DutyCycleOut flywheel1DutyReq = new DutyCycleOut(0.0);
   private final Follower flywheel1FollowerReq;
 
   // Shooter 2
   private final TalonFX flywheel2Leader;
   private final TalonFX flywheel2Follower;
   private final VelocityTorqueCurrentFOC flywheel2VelocityReq = new VelocityTorqueCurrentFOC(0.0);
+  private final TorqueCurrentFOC flywheel2TorqueReq = new TorqueCurrentFOC(0.0);
+  private final DutyCycleOut flywheel2DutyReq = new DutyCycleOut(0.0);
   private final Follower flywheel2FollowerReq;
 
   // Shooter 1 signals
@@ -195,6 +201,38 @@ public class ShooterIOTalonFX implements ShooterIO {
     flywheel1Follower.setControl(flywheel1FollowerReq);
     flywheel2Leader.setControl(
         flywheel2VelocityReq.withVelocity(rps).withAcceleration(accelRpsPerSec));
+    flywheel2Follower.setControl(flywheel2FollowerReq);
+  }
+
+  @Override
+  public void setFlywheelVelocity(double rps, double accelRpsPerSec, double torqueCurrentAmps) {
+    flywheel1Leader.setControl(
+        flywheel1VelocityReq
+            .withVelocity(rps)
+            .withAcceleration(accelRpsPerSec)
+            .withFeedForward(torqueCurrentAmps));
+    flywheel1Follower.setControl(flywheel1FollowerReq);
+    flywheel2Leader.setControl(
+        flywheel2VelocityReq
+            .withVelocity(rps)
+            .withAcceleration(accelRpsPerSec)
+            .withFeedForward(torqueCurrentAmps));
+    flywheel2Follower.setControl(flywheel2FollowerReq);
+  }
+
+  @Override
+  public void setFlywheelTorqueCurrent(double amps) {
+    flywheel1Leader.setControl(flywheel1TorqueReq.withOutput(amps));
+    flywheel1Follower.setControl(flywheel1FollowerReq);
+    flywheel2Leader.setControl(flywheel2TorqueReq.withOutput(amps));
+    flywheel2Follower.setControl(flywheel2FollowerReq);
+  }
+
+  @Override
+  public void setFlywheelDutyCycle(double dutyCycle) {
+    flywheel1Leader.setControl(flywheel1DutyReq.withOutput(dutyCycle));
+    flywheel1Follower.setControl(flywheel1FollowerReq);
+    flywheel2Leader.setControl(flywheel2DutyReq.withOutput(dutyCycle));
     flywheel2Follower.setControl(flywheel2FollowerReq);
   }
 

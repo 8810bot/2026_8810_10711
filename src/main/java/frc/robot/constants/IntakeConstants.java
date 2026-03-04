@@ -29,6 +29,13 @@ public final class IntakeConstants {
   public static final double ROLLER_INTAKE_VOLTS = 8;
   /** Rollers voltage for stopping (volts). */
   public static final double ROLLER_STOP_VOLTS = 0.;
+  // Current limits (amps)
+  public static final boolean ROLLER_ENABLE_SUPPLY_CURRENT_LIMIT = true;
+  public static final double ROLLER_SUPPLY_CURRENT_LIMIT_AMPS = 30.0;
+  public static final double ROLLER_SUPPLY_CURRENT_LOWER_LIMIT_AMPS = 30.0;
+  public static final double ROLLER_SUPPLY_CURRENT_LOWER_TIME_SEC = 1.0;
+  public static final boolean ROLLER_ENABLE_STATOR_CURRENT_LIMIT = true;
+  public static final double ROLLER_STATOR_CURRENT_LIMIT_AMPS = 80.0;
 
   // ---------------- Deploy (收放摆臂) ----------------
   /** Sensor-to-mechanism ratio for deploy motor (motor rotations per mechanism rotation). */

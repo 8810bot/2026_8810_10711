@@ -71,5 +71,29 @@ public final class ShooterConstants {
   /** Only count shots when setpoint is above this (RPS), to avoid counting at idle. */
   public static final double SHOT_COUNT_MIN_SETPOINT_RPS = 5.0;
 
+  /** Flywheel control state-machine tuning (startup/hold/ball/recovery). */
+  public static final class FlywheelControlConstants {
+    /** Enter HOLD when within this band of the setpoint (RPS). */
+    public static final double STARTUP_ENTER_HOLD_BAND_RPS = 1.0;
+    /** Enter RECOVERY when speed drops below setpoint by this band (RPS). */
+    public static final double RECOVERY_DROP_BAND_RPS = 3.0;
+    /** Exit RECOVERY when speed is within this band of setpoint (RPS). */
+    public static final double RECOVERY_EXIT_BAND_RPS = 1.5;
+
+    /** Torque-current during ball contact (amps). */
+    public static final double BALL_TORQUE_CURRENT_AMPS = 60.0;
+    /** Torque-current feedforward used in HOLD (amps). */
+    public static final double HOLD_TORQUE_FF_AMPS = 0.0;
+
+    /** Minimum dwell time in each state (sec) to prevent chatter. */
+    public static final double MODE_MIN_DWELL_SEC = 0.06;
+    /** Maximum time to stay in BALL if no sensor clears (sec). */
+    public static final double BALL_PHASE_TIMEOUT_SEC = 0.12;
+    /** Duty cycle used for STARTUP/RECOVERY boost (-1.0 to 1.0). */
+    public static final double BOOST_DUTY_CYCLE = 1.0;
+
+    private FlywheelControlConstants() {}
+  }
+
   private ShooterConstants() {}
 }

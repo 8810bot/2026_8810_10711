@@ -36,5 +36,16 @@ public interface ShooterIO {
     setFlywheelVelocity(rps);
   }
 
+  /** Sets both flywheels with acceleration and torque-current feedforward (RPS, RPS/s, amps). */
+  default void setFlywheelVelocity(double rps, double accelRpsPerSec, double torqueCurrentAmps) {
+    setFlywheelVelocity(rps, accelRpsPerSec);
+  }
+
+  /** Sets both flywheels to a torque-current output (amps). */
+  default void setFlywheelTorqueCurrent(double amps) {}
+
+  /** Sets both flywheels to a duty-cycle output (-1.0 to 1.0). */
+  default void setFlywheelDutyCycle(double dutyCycle) {}
+
   default void stop() {}
 }
