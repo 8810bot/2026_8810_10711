@@ -13,7 +13,7 @@ import com.ctre.phoenix6.signals.NeutralModeValue;
 import edu.wpi.first.units.measure.AngularVelocity;
 import edu.wpi.first.units.measure.Current;
 import edu.wpi.first.units.measure.Voltage;
-import frc.robot.constants.ShooterConstants;
+import frc.robot.Constants.ShooterConstants;
 
 /** TalonFX implementation for dual shooter flywheels. */
 public class ShooterIOTalonFX implements ShooterIO {

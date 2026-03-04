@@ -1,14 +1,21 @@
-// Copyright (c) 2021-2026 Littleton Robotics
+// Copyright 2021-2025 FRC 6328
 // http://github.com/Mechanical-Advantage
 //
-// Use of this source code is governed by a BSD
-// license that can be found in the LICENSE file
-// at the root directory of this project.
+// This program is free software; you can redistribute it and/or
+// modify it under the terms of the GNU General Public License
+// version 3 as published by the Free Software Foundation or
+// available in the root directory of this project.
+//
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+// GNU General Public License for more details.
 
 package frc.robot.subsystems.drive;
 
 import static edu.wpi.first.units.Units.*;
 
+import com.ctre.phoenix6.CANBus;
 import com.pathplanner.lib.auto.AutoBuilder;
 import com.pathplanner.lib.config.ModuleConfig;
 import com.pathplanner.lib.config.PIDConstants;
@@ -19,9 +26,11 @@ import com.pathplanner.lib.util.PathPlannerLogging;
 import edu.wpi.first.hal.FRCNetComm.tInstances;
 import edu.wpi.first.hal.FRCNetComm.tResourceType;
 import edu.wpi.first.hal.HAL;
+import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.Matrix;
 import edu.wpi.first.math.VecBuilder;
 import edu.wpi.first.math.estimator.SwerveDrivePoseEstimator;
+import edu.wpi.first.math.filter.Debouncer;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
@@ -37,28 +46,37 @@ import edu.wpi.first.wpilibj.Alert;
 import edu.wpi.first.wpilibj.Alert.AlertType;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.DriverStation.Alliance;
-import edu.wpi.first.wpilibj.smartdashboard.Field2d;
-import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
+import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 import frc.robot.Constants;
 import frc.robot.Constants.Mode;
-import frc.robot.Constants.PoseEstimatorConstants;
 import frc.robot.generated.TunerConstants;
 import frc.robot.util.LimelightHelpers;
 import frc.robot.util.LocalADStarAK;
+import frc.robot.util.swerve.ModuleLimits;
+import frc.robot.util.swerve.SwerveSetpoint;
+import frc.robot.util.swerve.SwerveSetpointGenerator;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 import org.littletonrobotics.junction.AutoLogOutput;
 import org.littletonrobotics.junction.Logger;
 
 public class Drive extends SubsystemBase {
-  private static Drive instance;
-  private static Field2d field = new Field2d();
-  public static boolean velocitylimit = true;
+  // --- Setpoint generation (steering vel + drive accel limiting) ---
+
+  private static final double DEFAULT_MAX_DRIVE_ACCEL_MPS2 = 40;
+  private static final double DEFAULT_MAX_STEER_VEL_RAD_PER_SEC = 100.0;
+  private final SwerveSetpointGenerator setpointGenerator =
+      new SwerveSetpointGenerator(
+          new SwerveDriveKinematics(getModuleTranslations()), getModuleTranslations());
+  private SwerveSetpoint prevSetpoint = null;
+  private double lastSetpointTimestampSec = Double.NaN;
+
   // TunerConstants doesn't include these constants, so they are declared locally
-  static final double ODOMETRY_FREQUENCY = TunerConstants.kCANBus.isNetworkFD() ? 250.0 : 100.0;
+  static final double ODOMETRY_FREQUENCY =
+      new CANBus(TunerConstants.DrivetrainConstants.CANBusName).isNetworkFD() ? 250.0 : 100.0;
   public static final double DRIVE_BASE_RADIUS =
       Math.max(
           Math.max(
@@ -67,12 +85,18 @@ public class Drive extends SubsystemBase {
           Math.max(
               Math.hypot(TunerConstants.BackLeft.LocationX, TunerConstants.BackLeft.LocationY),
               Math.hypot(TunerConstants.BackRight.LocationX, TunerConstants.BackRight.LocationY)));
+  // --- Field-relative acceleration estimation ---
+  private double lastAccelTimestampSec = Double.NaN;
+  private Translation2d lastFieldVel = new Translation2d();
+  private Translation2d fieldAccelFiltered = new Translation2d();
+
+  // Tune this: lower = more smoothing (slower response), higher = less smoothing (noisier)
+  private static final double ACCEL_CUTOFF_HZ = 12.0; // 8~20Hz 常见
 
   // PathPlanner config constants
   private static final double ROBOT_MASS_KG = 74.088;
   private static final double ROBOT_MOI = 6.883;
   private static final double WHEEL_COF = 1.2;
-  public static double distanceToGoal;
   private static final RobotConfig PP_CONFIG =
       new RobotConfig(
           ROBOT_MASS_KG,
@@ -89,14 +113,23 @@ public class Drive extends SubsystemBase {
 
   static final Lock odometryLock = new ReentrantLock();
   private final GyroIO gyroIO;
-  private final GyroIOInputsAutoLogged gyroInputs = new GyroIOInputsAutoLogged();
+  private final GyroIO.GyroIOInputs gyroInputs = new GyroIO.GyroIOInputs();
   private final Module[] modules = new Module[4]; // FL, FR, BL, BR
   private final SysIdRoutine sysId;
   private final Alert gyroDisconnectedAlert =
       new Alert("Disconnected gyro, using kinematics as fallback.", AlertType.kError);
 
+  // --- Tilt detection (pitch/roll) ---
+  private final Debouncer tiltTripDebouncer =
+      new Debouncer(
+          Constants.DrivetrainConstants.TILT_TRIP_DEBOUNCE_SEC, Debouncer.DebounceType.kRising);
+  private final Debouncer tiltClearDebouncer =
+      new Debouncer(
+          Constants.DrivetrainConstants.TILT_CLEAR_DEBOUNCE_SEC, Debouncer.DebounceType.kRising);
+  private boolean isTilted = false;
+
   private SwerveDriveKinematics kinematics = new SwerveDriveKinematics(getModuleTranslations());
-  private Rotation2d rawGyroRotation = Rotation2d.kZero;
+  private Rotation2d rawGyroRotation = new Rotation2d();
   private SwerveModulePosition[] lastModulePositions = // For delta tracking
       new SwerveModulePosition[] {
         new SwerveModulePosition(),
@@ -105,7 +138,7 @@ public class Drive extends SubsystemBase {
         new SwerveModulePosition()
       };
   private SwerveDrivePoseEstimator poseEstimator =
-      new SwerveDrivePoseEstimator(kinematics, rawGyroRotation, lastModulePositions, Pose2d.kZero);
+      new SwerveDrivePoseEstimator(kinematics, rawGyroRotation, lastModulePositions, new Pose2d());
 
   public Drive(
       GyroIO gyroIO,
@@ -113,10 +146,6 @@ public class Drive extends SubsystemBase {
       ModuleIO frModuleIO,
       ModuleIO blModuleIO,
       ModuleIO brModuleIO) {
-    if (instance != null) {
-      throw new IllegalStateException("Drive already constructed");
-    }
-    instance = this;
     this.gyroIO = gyroIO;
     modules[0] = new Module(flModuleIO, 0, TunerConstants.FrontLeft);
     modules[1] = new Module(frModuleIO, 1, TunerConstants.FrontRight);
@@ -143,7 +172,8 @@ public class Drive extends SubsystemBase {
     Pathfinding.setPathfinder(new LocalADStarAK());
     PathPlannerLogging.setLogActivePathCallback(
         (activePath) -> {
-          Logger.recordOutput("Odometry/Trajectory", activePath.toArray(new Pose2d[0]));
+          Logger.recordOutput(
+              "Odometry/Trajectory", activePath.toArray(new Pose2d[activePath.size()]));
         });
     PathPlannerLogging.setLogTargetPoseCallback(
         (targetPose) -> {
@@ -162,9 +192,107 @@ public class Drive extends SubsystemBase {
                 (voltage) -> runCharacterization(voltage.in(Volts)), null, this));
   }
 
+  private void updateFieldAccelerationEstimate() {
+    // Use FPGA timestamp to match WPILib timing
+    double now = edu.wpi.first.wpilibj.Timer.getFPGATimestamp();
+
+    ChassisSpeeds vField = getFieldRelativeSpeeds();
+    Translation2d fieldVelNow =
+        new Translation2d(vField.vxMetersPerSecond, vField.vyMetersPerSecond);
+
+    if (Double.isNaN(lastAccelTimestampSec)) {
+      // First sample: initialize
+      lastAccelTimestampSec = now;
+      lastFieldVel = fieldVelNow;
+      fieldAccelFiltered = new Translation2d();
+      return;
+    }
+
+    double dt = now - lastAccelTimestampSec;
+    // Guard against weird dt (e.g., sim hiccups)
+    if (dt <= 1e-4 || dt > 0.1) {
+      lastAccelTimestampSec = now;
+      lastFieldVel = fieldVelNow;
+      // Do not update accel on bad dt
+      return;
+    }
+
+    // Raw acceleration from finite difference
+    Translation2d accelRaw = fieldVelNow.minus(lastFieldVel).div(dt);
+
+    // First-order low-pass filter (exponential smoothing)
+    double alpha = lowPassAlpha(ACCEL_CUTOFF_HZ, dt);
+    fieldAccelFiltered =
+        new Translation2d(
+            fieldAccelFiltered.getX() + alpha * (accelRaw.getX() - fieldAccelFiltered.getX()),
+            fieldAccelFiltered.getY() + alpha * (accelRaw.getY() - fieldAccelFiltered.getY()));
+
+    lastAccelTimestampSec = now;
+    lastFieldVel = fieldVelNow;
+
+    // Optional logs to AdvantageKit
+    Logger.recordOutput("Drive/FieldVel", fieldVelNow);
+    Logger.recordOutput("Drive/FieldAccelRaw", accelRaw);
+    Logger.recordOutput("Drive/FieldAccelFiltered", fieldAccelFiltered);
+  }
+
+  /** Applies a Limelight MegaTag2 pose update (translation only; heading not corrected). */
+  private void updatePoseWithLimelightMegaTag2(String llName) {
+
+    // Provide robot orientation to Limelight for MegaTag2 filtering.
+    double yawDeg = getRotation().getDegrees();
+    double yawRateDegPerSec = Math.toDegrees(getChassisSpeeds().omegaRadiansPerSecond);
+    LimelightHelpers.SetRobotOrientation(llName, yawDeg, yawRateDegPerSec, 0.0, 0.0, 0.0, 0.0);
+
+    // Get MegaTag2 pose estimate (WPILib Blue coordinate system).
+    LimelightHelpers.PoseEstimate est =
+        LimelightHelpers.getBotPoseEstimate_wpiBlue_MegaTag2(llName);
+    if (est == null
+        || est.tagCount <= 0
+        || Math.hypot(getChassisSpeeds().vxMetersPerSecond, getChassisSpeeds().vyMetersPerSecond)
+            > 2
+        || getChassisSpeeds().omegaRadiansPerSecond > 3) {
+      return;
+    }
+
+    // Translation std dev based on TA -> dev interpolation.
+    double ta = LimelightHelpers.getTA(llName);
+    double xyStdDev = Constants.VisionConstants.taToXYStdDevMeters.get(Math.max(0.0, ta));
+
+    // Heading should not be corrected: force rotation to current heading and give huge theta std
+    // dev.
+    Pose2d visionPoseNoHeading = new Pose2d(est.pose.getTranslation(), getRotation());
+
+    addVisionMeasurement(
+        visionPoseNoHeading,
+        est.timestampSeconds,
+        VecBuilder.fill(xyStdDev, xyStdDev, Constants.VisionConstants.thetaStdDevRad));
+
+    Logger.recordOutput("Vision/Limelight/TA", ta);
+    Logger.recordOutput("Vision/Limelight/XYStdDev", xyStdDev);
+    Logger.recordOutput("Vision/Limelight/TagCount", est.tagCount);
+    Logger.recordOutput("Vision/Limelight/Pose", visionPoseNoHeading);
+  }
+
+  private static double lowPassAlpha(double cutoffHz, double dt) {
+    // alpha = 1 - exp(-2*pi*fc*dt)
+    double x = -2.0 * Math.PI * cutoffHz * dt;
+    return 1.0 - Math.exp(x);
+  }
+  /** Returns filtered field-relative linear acceleration (m/s^2). */
+  public Translation2d getFieldRelativeAcceleration() {
+    return fieldAccelFiltered;
+  }
+
+  @AutoLogOutput(key = "SwerveChassisAccel/MeasuredFieldOriented")
+  public ChassisSpeeds getLoggedFieldRelativeAcceleration() {
+    return new ChassisSpeeds(fieldAccelFiltered.getX(), fieldAccelFiltered.getY(), 0);
+  }
+
   @Override
   public void periodic() {
     odometryLock.lock(); // Prevents odometry updates while reading data
+
     gyroIO.updateInputs(gyroInputs);
     Logger.processInputs("Drive/Gyro", gyroInputs);
     for (var module : modules) {
@@ -215,65 +343,67 @@ public class Drive extends SubsystemBase {
 
       // Apply update
       poseEstimator.updateWithTime(sampleTimestamps[i], rawGyroRotation, modulePositions);
-
-      field.setRobotPose(this.getPose());
-      SmartDashboard.putData(field);
     }
-    updateVision();
+    updateFieldAccelerationEstimate();
+    updatePoseWithLimelightMegaTag2("limelight");
+    updatePoseWithLimelightMegaTag2("limelight-g");
+
     // Update gyro alert
     gyroDisconnectedAlert.set(!gyroInputs.connected && Constants.currentMode != Mode.SIM);
 
-    SmartDashboard.putNumber("X", this.getPose().getX());
-    SmartDashboard.putBoolean("Velocity Limit Disabled", !velocitylimit);
-
-    // distance from goal
-    Pose2d pose = this.getPose();
-    double robotX = pose.getX();
-    double robotY = pose.getY();
-    double dx, dy = 0;
-    // Vector from robot to goal
-    if (DriverStation.getAlliance().get() == Alliance.Blue) {
-      dx = Constants.aimconstants.bluegoalpos.getX() - robotX;
-      dy = Constants.aimconstants.bluegoalpos.getY() - robotY;
-    } else {
-      dx = Constants.aimconstants.redgoalpos.getX() - robotX;
-      dy = Constants.aimconstants.redgoalpos.getY() - robotY;
-    }
-    distanceToGoal = Math.hypot(dx, dy);
-    Logger.recordOutput("Drive/dist_from_goal", distanceToGoal);
+    // Tilt detection (uses pitch/roll)
+    updateTiltDetection();
   }
 
-  public void updateVision() {
-    LimelightHelpers.SetIMUMode("limelight", 1);
-    LimelightHelpers.SetRobotOrientation(
-        "limelight", getPose().getRotation().getDegrees(), 0, 0, 0, 0, 0);
-    LimelightHelpers.PoseEstimate mt2 =
-        LimelightHelpers.getBotPoseEstimate_wpiBlue_MegaTag2("limelight");
-    // ImprovedLL.MT2stddevs devs = ImprovedLL.getmt2Devs();
-    // ImprovedLL.mt2stdDev stdDev = ImprovedLL.getmt2Dev(RobotContainer.m_Limelight);
-    if (mt2 == null) {
-      DriverStation.reportWarning("limelight" + " Diconnected!", false);
-      return;
+  private void updateTiltDetection() {
+    double pitchRad = gyroInputs.pitchPosition.getRadians();
+    double rollRad = gyroInputs.rollPosition.getRadians();
+
+    // Absolute tilt angle from combining pitch+roll.
+    // Model: the "up" direction after pitch+roll has z component cos(pitch)*cos(roll),
+    // so tilt = acos(zUp). This behaves like sqrt(p^2+r^2) for small angles.
+    double zUp = Math.cos(pitchRad) * Math.cos(rollRad);
+    zUp = MathUtil.clamp(zUp, -1.0, 1.0);
+    double tiltRad = Math.acos(zUp);
+    double tiltDeg = Math.toDegrees(tiltRad);
+
+    if (!isTilted) {
+      if (tiltTripDebouncer.calculate(tiltDeg >= Constants.DrivetrainConstants.TILT_TRIP_DEG)) {
+        isTilted = true;
+        tiltClearDebouncer.calculate(false);
+      }
+    } else {
+      if (tiltClearDebouncer.calculate(tiltDeg <= Constants.DrivetrainConstants.TILT_CLEAR_DEG)) {
+        isTilted = false;
+        tiltTripDebouncer.calculate(false);
+      }
     }
 
-    if (Math.abs(getChassisSpeeds().omegaRadiansPerSecond) <= 2 * Math.PI
-        && mt2.tagCount > 0
-        && mt2.avgTagDist < 4
-        && Math.hypot(getChassisSpeeds().vxMetersPerSecond, getChassisSpeeds().vyMetersPerSecond)
-            < 2) {
-      addVisionMeasurement(
-          mt2.pose,
-          mt2.timestampSeconds,
-          VecBuilder.fill(
-              PoseEstimatorConstants.tAtoDev.get(mt2.avgTagArea),
-              PoseEstimatorConstants.tAtoDev.get(mt2.avgTagArea),
-              100000000)
-          // VecBuilder.fill(0.00001,0.00001, 100000000.)
-          // VecBuilder.fill(devs.xdev, devs.ydev, 100000000.)
-          );
-      SmartDashboard.putNumber("tA", mt2.avgTagArea);
-      SmartDashboard.putNumber("Dev", PoseEstimatorConstants.tAtoDev.get(mt2.avgTagArea));
-    }
+    Logger.recordOutput("Drive/Tilt/PitchDeg", Math.toDegrees(pitchRad));
+    Logger.recordOutput("Drive/Tilt/RollDeg", Math.toDegrees(rollRad));
+    Logger.recordOutput("Drive/Tilt/AbsTiltDeg", tiltDeg);
+    Logger.recordOutput("Drive/Tilt/IsTilted", isTilted);
+  }
+
+  public Rotation2d getPitch() {
+    return gyroInputs.pitchPosition;
+  }
+
+  public Rotation2d getRoll() {
+    return gyroInputs.rollPosition;
+  }
+
+  /** Returns absolute tilt angle (deg) from pitch+roll. */
+  public double getTiltMagnitudeDeg() {
+    double pitchRad = getPitch().getRadians();
+    double rollRad = getRoll().getRadians();
+    double zUp = Math.cos(pitchRad) * Math.cos(rollRad);
+    zUp = MathUtil.clamp(zUp, -1.0, 1.0);
+    return Math.toDegrees(Math.acos(zUp));
+  }
+
+  public boolean isTilted() {
+    return isTilted;
   }
 
   /**
@@ -282,14 +412,37 @@ public class Drive extends SubsystemBase {
    * @param speeds Speeds in meters/sec
    */
   public void runVelocity(ChassisSpeeds speeds) {
-    // Calculate module setpoints
-    ChassisSpeeds discreteSpeeds = ChassisSpeeds.discretize(speeds, 0.02);
-    SwerveModuleState[] setpointStates = kinematics.toSwerveModuleStates(discreteSpeeds);
-    SwerveDriveKinematics.desaturateWheelSpeeds(setpointStates, TunerConstants.kSpeedAt12Volts);
+    // Estimate dt for setpoint limiting
+    double now = Timer.getFPGATimestamp();
+    double dt = Double.isNaN(lastSetpointTimestampSec) ? 0.02 : (now - lastSetpointTimestampSec);
+    lastSetpointTimestampSec = now;
+    // Guard against weird dt (sim hiccups / first cycle)
+    if (dt <= 1e-4 || dt > 0.1) {
+      dt = 0.02;
+    }
+
+    // Initialize previous setpoint from measured state (avoids startup discontinuities)
+    if (prevSetpoint == null) {
+      prevSetpoint = new SwerveSetpoint(getChassisSpeeds(), getModuleStates());
+    }
+
+    // Apply setpoint generator limits (robot-relative)
+    double maxVel = getMaxLinearSpeedMetersPerSec();
+    ModuleLimits limits =
+        new ModuleLimits(maxVel, DEFAULT_MAX_DRIVE_ACCEL_MPS2, DEFAULT_MAX_STEER_VEL_RAD_PER_SEC);
+
+    // Discretize desired speeds first for consistency with standard swerve control
+    ChassisSpeeds discreteSpeeds = ChassisSpeeds.discretize(speeds, dt);
+    SwerveSetpoint generated =
+        setpointGenerator.generateSetpoint(limits, prevSetpoint, discreteSpeeds, dt);
+    SwerveModuleState[] setpointStates = generated.moduleStates();
+
+    // Enforce global wheel speed limit
+    SwerveDriveKinematics.desaturateWheelSpeeds(setpointStates, maxVel);
 
     // Log unoptimized setpoints and setpoint speeds
     Logger.recordOutput("SwerveStates/Setpoints", setpointStates);
-    Logger.recordOutput("SwerveChassisSpeeds/Setpoints", discreteSpeeds);
+    Logger.recordOutput("SwerveChassisSpeeds/Setpoints", generated.chassisSpeeds());
 
     // Send setpoints to modules
     for (int i = 0; i < 4; i++) {
@@ -298,26 +451,15 @@ public class Drive extends SubsystemBase {
 
     // Log optimized setpoints (runSetpoint mutates each state)
     Logger.recordOutput("SwerveStates/SetpointsOptimized", setpointStates);
+
+    // Save the applied setpoint as the next previous setpoint (after optimization/flips)
+    prevSetpoint = new SwerveSetpoint(generated.chassisSpeeds(), setpointStates);
   }
 
   /** Runs the drive in a straight line with the specified drive output. */
   public void runCharacterization(double output) {
     for (int i = 0; i < 4; i++) {
       modules[i].runCharacterization(output);
-    }
-  }
-
-  /** Runs all modules to the specified angle without driving the wheels. */
-  public void runWheelAngles(Rotation2d angle) {
-    for (int i = 0; i < 4; i++) {
-      modules[i].runTurn(angle);
-    }
-  }
-
-  /** Runs a specific module to the specified angle without driving the wheel. */
-  public void runModuleAngle(int index, Rotation2d angle) {
-    if (index >= 0 && index < 4) {
-      modules[index].runTurn(angle);
     }
   }
 
@@ -372,8 +514,13 @@ public class Drive extends SubsystemBase {
 
   /** Returns the measured chassis speeds of the robot. */
   @AutoLogOutput(key = "SwerveChassisSpeeds/Measured")
-  private ChassisSpeeds getChassisSpeeds() {
+  public ChassisSpeeds getChassisSpeeds() {
     return kinematics.toChassisSpeeds(getModuleStates());
+  }
+
+  @AutoLogOutput(key = "SwerveChassisSpeeds/MeasuredFieldOriented")
+  public ChassisSpeeds getFieldRelativeSpeeds() {
+    return ChassisSpeeds.fromRobotRelativeSpeeds(getChassisSpeeds(), getPose().getRotation());
   }
 
   /** Returns the position of each module in radians. */
@@ -437,12 +584,5 @@ public class Drive extends SubsystemBase {
       new Translation2d(TunerConstants.BackLeft.LocationX, TunerConstants.BackLeft.LocationY),
       new Translation2d(TunerConstants.BackRight.LocationX, TunerConstants.BackRight.LocationY)
     };
-  }
-
-  public static Drive getInstance() {
-    if (instance == null) {
-      throw new IllegalStateException("Drive has not been constructed yet");
-    }
-    return instance;
   }
 }

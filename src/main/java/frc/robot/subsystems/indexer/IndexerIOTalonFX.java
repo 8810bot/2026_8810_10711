@@ -11,7 +11,7 @@ import com.ctre.phoenix6.signals.MotorAlignmentValue;
 import com.ctre.phoenix6.signals.NeutralModeValue;
 import edu.wpi.first.units.measure.Current;
 import edu.wpi.first.units.measure.Voltage;
-import frc.robot.constants.IndexerConstants;
+import frc.robot.Constants;
 
 public class IndexerIOTalonFX implements IndexerIO {
   private final TalonFX motor1;
@@ -28,21 +28,25 @@ public class IndexerIOTalonFX implements IndexerIO {
   private final Follower followerReq1;
 
   public IndexerIOTalonFX() {
-    motor1 = new TalonFX(IndexerConstants.MOTOR_1_ID, "mainCAN");
-    motor2 = new TalonFX(IndexerConstants.MOTOR_2_ID, "mainCAN");
+    motor1 = new TalonFX(Constants.IndexerConstants.MOTOR_1_ID, "mainCAN");
+    motor2 = new TalonFX(Constants.IndexerConstants.MOTOR_2_ID, "mainCAN");
 
     var cfg = new TalonFXConfiguration();
     cfg.MotorOutput.NeutralMode = NeutralModeValue.Coast;
     cfg.MotorOutput.Inverted =
-        IndexerConstants.INVERTED
+        Constants.IndexerConstants.INVERTED
             ? InvertedValue.Clockwise_Positive
             : InvertedValue.CounterClockwise_Positive;
-    cfg.CurrentLimits.SupplyCurrentLimitEnable = IndexerConstants.ENABLE_SUPPLY_CURRENT_LIMIT;
-    cfg.CurrentLimits.SupplyCurrentLimit = IndexerConstants.SUPPLY_CURRENT_LIMIT_AMPS;
-    cfg.CurrentLimits.SupplyCurrentLowerLimit = IndexerConstants.SUPPLY_CURRENT_LOWER_LIMIT_AMPS;
-    cfg.CurrentLimits.SupplyCurrentLowerTime = IndexerConstants.SUPPLY_CURRENT_LOWER_TIME_SEC;
-    cfg.CurrentLimits.StatorCurrentLimitEnable = IndexerConstants.ENABLE_STATOR_CURRENT_LIMIT;
-    cfg.CurrentLimits.StatorCurrentLimit = IndexerConstants.STATOR_CURRENT_LIMIT_AMPS;
+    cfg.CurrentLimits.SupplyCurrentLimitEnable =
+        Constants.IndexerConstants.ENABLE_SUPPLY_CURRENT_LIMIT;
+    cfg.CurrentLimits.SupplyCurrentLimit = Constants.IndexerConstants.SUPPLY_CURRENT_LIMIT_AMPS;
+    cfg.CurrentLimits.SupplyCurrentLowerLimit =
+        Constants.IndexerConstants.SUPPLY_CURRENT_LOWER_LIMIT_AMPS;
+    cfg.CurrentLimits.SupplyCurrentLowerTime =
+        Constants.IndexerConstants.SUPPLY_CURRENT_LOWER_TIME_SEC;
+    cfg.CurrentLimits.StatorCurrentLimitEnable =
+        Constants.IndexerConstants.ENABLE_STATOR_CURRENT_LIMIT;
+    cfg.CurrentLimits.StatorCurrentLimit = Constants.IndexerConstants.STATOR_CURRENT_LIMIT_AMPS;
     motor1.getConfigurator().apply(cfg);
     motor2.getConfigurator().apply(cfg);
 

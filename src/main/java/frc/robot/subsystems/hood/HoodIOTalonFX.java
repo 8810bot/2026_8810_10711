@@ -14,7 +14,7 @@ import edu.wpi.first.units.measure.Angle;
 import edu.wpi.first.units.measure.AngularVelocity;
 import edu.wpi.first.units.measure.Current;
 import edu.wpi.first.units.measure.Voltage;
-import frc.robot.constants.HoodConstants;
+import frc.robot.Constants.HoodConstants;
 
 /** TalonFX implementation of HoodIO. Shared by both shooters. */
 public class HoodIOTalonFX implements HoodIO {
