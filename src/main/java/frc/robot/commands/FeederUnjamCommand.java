@@ -30,17 +30,13 @@ public class FeederUnjamCommand extends Command {
   public void initialize() {
     state = State.NORMAL;
     unjamStartSec = Double.NaN;
-    jamDebouncer =
-        new Debouncer(
-            UnjamConstants.JAM_DEBOUNCE_SEC, Debouncer.DebounceType.kRising);
+    jamDebouncer = new Debouncer(UnjamConstants.JAM_DEBOUNCE_SEC, Debouncer.DebounceType.kRising);
   }
 
   @Override
   public void execute() {
     boolean jamDetected =
-        jamDebouncer.calculate(
-            feeder.getCurrentAmps()
-                > UnjamConstants.JAM_CURRENT_THRESHOLD_AMPS);
+        jamDebouncer.calculate(feeder.getCurrentAmps() > UnjamConstants.JAM_CURRENT_THRESHOLD_AMPS);
 
     if (state == State.NORMAL) {
       if (jamDetected) {

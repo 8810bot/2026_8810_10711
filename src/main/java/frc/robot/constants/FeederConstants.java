@@ -57,10 +57,12 @@ public final class FeederConstants {
   public static final class UnjamConstants {
     /** Normal feed speeds. */
     public static final double NORMAL_FEEDER_RPS = 24.0;
+
     public static final double NORMAL_INDEXER_VOLTS = 8.0;
 
     /** Reverse speeds for unjamming (lower power). */
     public static final double UNJAM_FEEDER_RPS = -6.0;
+
     public static final double UNJAM_INDEXER_VOLTS = -3.0;
 
     /** Feeder current threshold (amps) to detect a jam. */

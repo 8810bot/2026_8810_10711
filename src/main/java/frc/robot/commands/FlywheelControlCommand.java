@@ -73,10 +73,7 @@ public class FlywheelControlCommand extends Command {
       }
       case HOLD -> {
         // Step 2: HOLD using velocity control + torque-current feedforward.
-        shooter.setVelocity(
-            targetRps,
-            0.0,
-            FlywheelControlConstants.HOLD_TORQUE_FF_AMPS);
+        shooter.setVelocity(targetRps, 0.0, FlywheelControlConstants.HOLD_TORQUE_FF_AMPS);
         if (ballPresent && canSwitch) {
           enterState(State.BALL); // Step 2: switch to BALL when contact is detected.
         } else if (currentRps < targetRps - FlywheelControlConstants.RECOVERY_DROP_BAND_RPS
@@ -89,8 +86,7 @@ public class FlywheelControlCommand extends Command {
         shooter.setTorqueCurrent(FlywheelControlConstants.BALL_TORQUE_CURRENT_AMPS);
         boolean timedOut =
             FlywheelControlConstants.BALL_PHASE_TIMEOUT_SEC > 0.0
-                && stateElapsedSec()
-                    >= FlywheelControlConstants.BALL_PHASE_TIMEOUT_SEC;
+                && stateElapsedSec() >= FlywheelControlConstants.BALL_PHASE_TIMEOUT_SEC;
         if ((!ballPresent || timedOut) && canSwitch) {
           enterState(State.RECOVERY); // Step 3: exit BALL when contact ends or times out.
         }
@@ -99,8 +95,7 @@ public class FlywheelControlCommand extends Command {
         // Step 4: RECOVERY boost to regain speed after ball exit.
         shooter.setDutyCycle(FlywheelControlConstants.BOOST_DUTY_CYCLE);
         boolean recovered =
-            currentRps
-                > targetRps - FlywheelControlConstants.RECOVERY_EXIT_BAND_RPS;
+            currentRps > targetRps - FlywheelControlConstants.RECOVERY_EXIT_BAND_RPS;
         if (recovered && canSwitch) {
           enterState(State.HOLD); // Step 4: return to HOLD once speed recovers.
         }

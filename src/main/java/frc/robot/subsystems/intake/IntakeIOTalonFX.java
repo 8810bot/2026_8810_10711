@@ -72,8 +72,7 @@ public class IntakeIOTalonFX implements IntakeIO {
         IntakeConstants.DEPLOY_INVERTED
             ? InvertedValue.Clockwise_Positive
             : InvertedValue.CounterClockwise_Positive;
-    deployCfg.Feedback.SensorToMechanismRatio =
-        IntakeConstants.DEPLOY_SENSOR_TO_MECH_RATIO;
+    deployCfg.Feedback.SensorToMechanismRatio = IntakeConstants.DEPLOY_SENSOR_TO_MECH_RATIO;
     deployCfg.Slot0 =
         new Slot0Configs()
             .withKP(IntakeConstants.DEPLOY_KP)

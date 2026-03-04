@@ -122,11 +122,9 @@ public class Drive extends SubsystemBase {
 
   // --- Tilt detection (pitch/roll) ---
   private final Debouncer tiltTripDebouncer =
-      new Debouncer(
-          DrivetrainConstants.TILT_TRIP_DEBOUNCE_SEC, Debouncer.DebounceType.kRising);
+      new Debouncer(DrivetrainConstants.TILT_TRIP_DEBOUNCE_SEC, Debouncer.DebounceType.kRising);
   private final Debouncer tiltClearDebouncer =
-      new Debouncer(
-          DrivetrainConstants.TILT_CLEAR_DEBOUNCE_SEC, Debouncer.DebounceType.kRising);
+      new Debouncer(DrivetrainConstants.TILT_CLEAR_DEBOUNCE_SEC, Debouncer.DebounceType.kRising);
   private boolean isTilted = false;
 
   private SwerveDriveKinematics kinematics = new SwerveDriveKinematics(getModuleTranslations());

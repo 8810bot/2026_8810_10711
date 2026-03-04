@@ -37,15 +37,11 @@ public class IndexerIOTalonFX implements IndexerIO {
         IndexerConstants.INVERTED
             ? InvertedValue.Clockwise_Positive
             : InvertedValue.CounterClockwise_Positive;
-    cfg.CurrentLimits.SupplyCurrentLimitEnable =
-        IndexerConstants.ENABLE_SUPPLY_CURRENT_LIMIT;
+    cfg.CurrentLimits.SupplyCurrentLimitEnable = IndexerConstants.ENABLE_SUPPLY_CURRENT_LIMIT;
     cfg.CurrentLimits.SupplyCurrentLimit = IndexerConstants.SUPPLY_CURRENT_LIMIT_AMPS;
-    cfg.CurrentLimits.SupplyCurrentLowerLimit =
-        IndexerConstants.SUPPLY_CURRENT_LOWER_LIMIT_AMPS;
-    cfg.CurrentLimits.SupplyCurrentLowerTime =
-        IndexerConstants.SUPPLY_CURRENT_LOWER_TIME_SEC;
-    cfg.CurrentLimits.StatorCurrentLimitEnable =
-        IndexerConstants.ENABLE_STATOR_CURRENT_LIMIT;
+    cfg.CurrentLimits.SupplyCurrentLowerLimit = IndexerConstants.SUPPLY_CURRENT_LOWER_LIMIT_AMPS;
+    cfg.CurrentLimits.SupplyCurrentLowerTime = IndexerConstants.SUPPLY_CURRENT_LOWER_TIME_SEC;
+    cfg.CurrentLimits.StatorCurrentLimitEnable = IndexerConstants.ENABLE_STATOR_CURRENT_LIMIT;
     cfg.CurrentLimits.StatorCurrentLimit = IndexerConstants.STATOR_CURRENT_LIMIT_AMPS;
     motor1.getConfigurator().apply(cfg);
     motor2.getConfigurator().apply(cfg);

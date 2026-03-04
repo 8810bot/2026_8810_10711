@@ -110,15 +110,10 @@ public class Intake extends SubsystemBase {
         if (now >= nextFlickToggleTs) {
           flickDownPhase = !flickDownPhase;
           nextFlickToggleTs =
-              now
-                  + (flickDownPhase
-                      ? IntakeConstants.FLICK_ON_SEC
-                      : IntakeConstants.FLICK_OFF_SEC);
+              now + (flickDownPhase ? IntakeConstants.FLICK_ON_SEC : IntakeConstants.FLICK_OFF_SEC);
         }
         deployPosRotSetpoint =
-            flickDownPhase
-                ? IntakeConstants.FLIP_POS_UP
-                : IntakeConstants.DEPLOY_POS_UP_ROT;
+            flickDownPhase ? IntakeConstants.FLIP_POS_UP : IntakeConstants.DEPLOY_POS_UP_ROT;
         rollerVoltsSetpoint = IntakeConstants.FLICK_ROLLER_VOLTS;
       }
     }

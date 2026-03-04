@@ -16,11 +16,9 @@ public class Shooter extends SubsystemBase {
 
   // Shot counting (per shooter)
   private final Debouncer shot1Debouncer =
-      new Debouncer(
-          ShooterConstants.SHOT_COUNT_DEBOUNCE_SEC, Debouncer.DebounceType.kRising);
+      new Debouncer(ShooterConstants.SHOT_COUNT_DEBOUNCE_SEC, Debouncer.DebounceType.kRising);
   private final Debouncer shot2Debouncer =
-      new Debouncer(
-          ShooterConstants.SHOT_COUNT_DEBOUNCE_SEC, Debouncer.DebounceType.kRising);
+      new Debouncer(ShooterConstants.SHOT_COUNT_DEBOUNCE_SEC, Debouncer.DebounceType.kRising);
 
   private boolean lastShot1Debounced = false;
   private boolean lastShot2Debounced = false;
