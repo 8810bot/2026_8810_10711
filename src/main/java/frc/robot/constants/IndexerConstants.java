@@ -21,6 +21,14 @@ public final class IndexerConstants {
 
   public static final boolean INVERTED = true;
 
+  // ---- IndexerUp ----
+  /** IndexerUp 电机 CAN ID。TODO: 确认实际 CAN ID */
+  public static final int INDEXER_UP_MOTOR_ID = 0;
+  /** IndexerUp 减速比 (电机转 / 输出轴转)。1:2 表示电机转2圈输出转1圈。 */
+  public static final double INDEXER_UP_SENSOR_TO_MECH_RATIO = 2.0;
+  /** IndexerUp 电机是否反转 */
+  public static final boolean INDEXER_UP_INVERTED = false;
+
   // Current limits (amps)
   public static final boolean ENABLE_SUPPLY_CURRENT_LIMIT = true;
   public static final double SUPPLY_CURRENT_LIMIT_AMPS = 70.0;

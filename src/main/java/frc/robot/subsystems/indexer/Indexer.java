@@ -8,6 +8,7 @@ public class Indexer extends SubsystemBase {
   private final IndexerIO.IndexerIOInputs inputs = new IndexerIO.IndexerIOInputs();
 
   private double voltsSetpoint = 0.0;
+  private double upVoltsSetpoint = 0.0;
 
   public Indexer(IndexerIO io) {
     this.io = io;
@@ -18,6 +19,7 @@ public class Indexer extends SubsystemBase {
     io.updateInputs(inputs);
     Logger.processInputs("Indexer", inputs);
     Logger.recordOutput("Indexer/VoltsSetpoint", voltsSetpoint);
+    Logger.recordOutput("Indexer/UpVoltsSetpoint", upVoltsSetpoint);
   }
 
   public void setVoltage(double volts) {
@@ -25,8 +27,15 @@ public class Indexer extends SubsystemBase {
     io.setVoltage(volts);
   }
 
+  /** 独立设置 IndexerUp 电压 (volts)。 */
+  public void setUpVoltage(double volts) {
+    upVoltsSetpoint = volts;
+    io.setUpVoltage(volts);
+  }
+
   public void stop() {
     voltsSetpoint = 0.0;
+    upVoltsSetpoint = 0.0;
     io.stop();
   }
 }

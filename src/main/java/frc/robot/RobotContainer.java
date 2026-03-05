@@ -16,7 +16,6 @@ package frc.robot;
 import com.pathplanner.lib.auto.AutoBuilder;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
-import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.DriverStation.Alliance;
 import edu.wpi.first.wpilibj.GenericHID;
@@ -34,6 +33,7 @@ import frc.robot.commands.DefaultFeederCommand;
 import frc.robot.commands.DefaultIndexerCommand;
 import frc.robot.commands.DriveCommands;
 import frc.robot.commands.LEDDefaultCommand;
+import frc.robot.commands.ManualShootCommand;
 import frc.robot.commands.MegaTrackIterativeCommand;
 import frc.robot.commands.SmashBumpCommand;
 import frc.robot.commands.SmashTrenchCommand;
@@ -88,6 +88,19 @@ public class RobotContainer {
   private LoggedTunableNumber testIndexerVolts =
       new LoggedTunableNumber("TestShoot/IndexerVolts", 3.0);
 
+  // ---- PWM 舵机控制 ----
+  /** PWM 通道号，对应 RoboRIO 上 PWM 端口编号 (0-9)。TODO: 改成实际使用的端口号 */
+  private static final int SERVO_PWM_CHANNEL = 0;
+  /** 舵机 PWM 对象 */
+  private final edu.wpi.first.wpilibj.PWM servo = new edu.wpi.first.wpilibj.PWM(SERVO_PWM_CHANNEL);
+  /** 仪表盘实时调节舵机位置 (0.0 ~ 1.0 对应舵机全行程) */
+  private final LoggedTunableNumber servoPosition = new LoggedTunableNumber("Servo/Position", 0.0);
+
+  // ---- IndexerUp 独立电压控制 ----
+  /** 仪表盘实时调节 IndexerUp 电压 (volts) */
+  private final LoggedTunableNumber indexerUpVolts =
+      new LoggedTunableNumber("IndexerUp/Volts", 0.0);
+
   @SuppressWarnings("unused")
   public final Shooter shooter;
 
@@ -132,6 +145,11 @@ public class RobotContainer {
 
   /** The container for the robot. Contains subsystems, OI devices, and commands. */
   public RobotContainer() {
+    // 配置舵机脉宽范围：最大 2.5ms，中间 1.5ms，最小 0.5ms (全量程 180° 舵机常用值)
+    // 参数顺序：max, deadbandMax, center, deadbandMin, min (单位：毫秒)
+    servo.setBoundsMicroseconds(2500, 1500, 1500, 1500, 500);
+    servo.setPeriodMultiplier(edu.wpi.first.wpilibj.PWM.PeriodMultiplier.k1X); // 默认 ~200Hz
+
     switch (Constants.currentMode) {
       case REAL:
         // Real robot, instantiate hardware IO implementations
@@ -217,6 +235,25 @@ public class RobotContainer {
     led.setDefaultCommand(new LEDDefaultCommand(this));
     feeder.setDefaultCommand(new DefaultFeederCommand(feeder));
     indexer.setDefaultCommand(new DefaultIndexerCommand(indexer));
+
+    // PWM 舵机：仪表盘实时调节 (通过 Trigger 单次触发)
+    new edu.wpi.first.wpilibj2.command.button.Trigger(() -> servoPosition.hasChanged(0))
+        .onTrue(
+            Commands.runOnce(
+                () -> {
+                  double pos = servoPosition.get();
+                  servo.setPosition(pos);
+                  Logger.recordOutput("Servo/SetPosition", pos);
+                }));
+
+    // IndexerUp：仪表盘实时调节电压
+    new edu.wpi.first.wpilibj2.command.button.Trigger(() -> indexerUpVolts.hasChanged(0))
+        .onTrue(
+            Commands.runOnce(
+                () -> {
+                  double volts = indexerUpVolts.get();
+                  indexer.setUpVoltage(volts);
+                }));
   }
 
   /**
@@ -233,14 +270,14 @@ public class RobotContainer {
             () -> -controller.getLeftY(),
             () -> -controller.getLeftX(),
             () -> -controller.getRightX()));
-    controller
-        .povUp()
-        .whileTrue(
-            Commands.run(
-                () -> {
-                  drive.runVelocity(new ChassisSpeeds(2, 0, 0));
-                },
-                drive));
+    // controller
+    //     .povUp()
+    //     .whileTrue(
+    //         Commands.run(
+    //             () -> {
+    //               drive.runVelocity(new ChassisSpeeds(2, 0, 0));
+    //             },
+    //             drive));
 
     // Debug: log nearest trench pre-align pose
     controller.rightStick().whileTrue(new SmashBumpCommand(this));
@@ -260,14 +297,14 @@ public class RobotContainer {
     controller
         .x()
         .onFalse(new InstantCommand(() -> intake.setWantedState(Intake.WantedState.UP_STOW_STOP)));
-    controller
-        .povDown()
-        .onTrue(
-            new InstantCommand(
-                () -> {
-                  Logger.recordOutput(
-                      "Bump/AlignPose", FieldConstants.getNearestTrenchPrePose(drive.getPose()));
-                }));
+    // controller
+    //     .povDown()
+    //     .onTrue(
+    //         new InstantCommand(
+    //             () -> {
+    //               Logger.recordOutput(
+    //                   "Bump/AlignPose", FieldConstants.getNearestTrenchPrePose(drive.getPose()));
+    //             }));
 
     // Reset gyro to 0° when B button is pressed
     controller
@@ -327,10 +364,34 @@ public class RobotContainer {
                 intake,
                 feeder,
                 indexer));
+    // 手动发射 (无自瞄，NT4 可调参数: Shooter/VelRps, Hood/AngleDeg)
     controller
         .rightBumper()
-        .whileTrue(Commands.run(() -> shooter.setVelocity(30), shooter))
-        .onFalse(Commands.runOnce(shooter::stop, shooter));
+        .whileTrue(
+            new ManualShootCommand(
+                this,
+                () -> shooterVelRpsTunable.get(),
+                () -> hoodAngleDegTunable.get(),
+                () -> indexerUpVolts.get()));
+
+    // ---- 舵机快捷测试按键 ----
+    // 十字键向上：舵机设为 0.5 (中点)
+    controller
+        .povUp()
+        .onTrue(
+            Commands.runOnce(
+                () -> {
+                  servo.setPosition(0.5);
+                }));
+
+    // 十字键向下：舵机设为 0.0 (零点)
+    controller
+        .povDown()
+        .onTrue(
+            Commands.runOnce(
+                () -> {
+                  servo.setPosition(0);
+                }));
     // controller
     //     .a()
     //     .whileTrue(
