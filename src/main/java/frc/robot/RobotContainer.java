@@ -89,10 +89,14 @@ public class RobotContainer {
       new LoggedTunableNumber("TestShoot/IndexerVolts", 3.0);
 
   // ---- PWM 舵机控制 ----
-  /** PWM 通道号，对应 RoboRIO 上 PWM 端口编号 (0-9)。TODO: 改成实际使用的端口号 */
-  private static final int SERVO_PWM_CHANNEL = 0;
-  /** 舵机 PWM 对象 */
-  private final edu.wpi.first.wpilibj.PWM servo = new edu.wpi.first.wpilibj.PWM(SERVO_PWM_CHANNEL);
+  /** 舵机 PWM 对象数组，对应通道 0 到 4 */
+  private final edu.wpi.first.wpilibj.PWM[] servos = {
+    new edu.wpi.first.wpilibj.PWM(0),
+    new edu.wpi.first.wpilibj.PWM(1),
+    new edu.wpi.first.wpilibj.PWM(2),
+    new edu.wpi.first.wpilibj.PWM(3),
+    new edu.wpi.first.wpilibj.PWM(4)
+  };
   /** 仪表盘实时调节舵机位置 (0.0 ~ 1.0 对应舵机全行程) */
   private final LoggedTunableNumber servoPosition = new LoggedTunableNumber("Servo/Position", 0.0);
 
@@ -147,8 +151,10 @@ public class RobotContainer {
   public RobotContainer() {
     // 配置舵机脉宽范围：最大 2.5ms，中间 1.5ms，最小 0.5ms (全量程 180° 舵机常用值)
     // 参数顺序：max, deadbandMax, center, deadbandMin, min (单位：毫秒)
-    servo.setBoundsMicroseconds(2500, 1500, 1500, 1500, 500);
-    servo.setPeriodMultiplier(edu.wpi.first.wpilibj.PWM.PeriodMultiplier.k1X); // 默认 ~200Hz
+    for (edu.wpi.first.wpilibj.PWM servo : servos) {
+      servo.setBoundsMicroseconds(2500, 1500, 1500, 1500, 500);
+      servo.setPeriodMultiplier(edu.wpi.first.wpilibj.PWM.PeriodMultiplier.k1X); // 默认 ~200Hz
+    }
 
     switch (Constants.currentMode) {
       case REAL:
@@ -236,15 +242,17 @@ public class RobotContainer {
     feeder.setDefaultCommand(new DefaultFeederCommand(feeder));
     indexer.setDefaultCommand(new DefaultIndexerCommand(indexer));
 
-    // PWM 舵机：仪表盘实时调节 (通过 Trigger 单次触发)
-    new edu.wpi.first.wpilibj2.command.button.Trigger(() -> servoPosition.hasChanged(0))
-        .onTrue(
-            Commands.runOnce(
-                () -> {
-                  double pos = servoPosition.get();
-                  servo.setPosition(pos);
-                  Logger.recordOutput("Servo/SetPosition", pos);
-                }));
+    // // PWM 舵机：仪表盘实时调节 (通过 Trigger 单次触发，测试用，同时控制所有舵机)
+    // new edu.wpi.first.wpilibj2.command.button.Trigger(() -> servoPosition.hasChanged(0))
+    //     .onTrue(
+    //         Commands.runOnce(
+    //             () -> {
+    //               double pos = servoPosition.get();
+    //               for (edu.wpi.first.wpilibj.PWM servo : servos) {
+    //                 servo.setPosition(pos);
+    //               }
+    //               Logger.recordOutput("Servo/SetPosition", pos);
+    //             }));
 
     // IndexerUp：仪表盘实时调节电压
     new edu.wpi.first.wpilibj2.command.button.Trigger(() -> indexerUpVolts.hasChanged(0))
@@ -374,24 +382,37 @@ public class RobotContainer {
                 () -> hoodAngleDegTunable.get(),
                 () -> indexerUpVolts.get()));
 
-    // ---- 舵机快捷测试按键 ----
-    // 十字键向上：舵机设为 0.5 (中点)
+    // ---- 舵机顺序动作：十字键向上 ----
+    // 依次将 1~4 置于 0，将 5 置于 0.5/3，每次间隔 0.5s
     controller
         .povUp()
         .onTrue(
-            Commands.runOnce(
-                () -> {
-                  servo.setPosition(0.5);
-                }));
+            Commands.sequence(
+                Commands.runOnce(() -> servos[0].setPosition(0)),
+                Commands.waitSeconds(0.5),
+                Commands.runOnce(() -> servos[1].setPosition(0)),
+                Commands.waitSeconds(0.5),
+                Commands.runOnce(() -> servos[2].setPosition(0)),
+                Commands.waitSeconds(0.5),
+                Commands.runOnce(() -> servos[3].setPosition(0)),
+                Commands.waitSeconds(0.5),
+                Commands.runOnce(() -> servos[4].setPosition(0.5 / 3.0))));
 
-    // 十字键向下：舵机设为 0.0 (零点)
+    // ---- 舵机顺序恢复：十字键向下 ----
+    // 按相反顺序列依次恢复为 0.5 (中点)
     controller
         .povDown()
         .onTrue(
-            Commands.runOnce(
-                () -> {
-                  servo.setPosition(0);
-                }));
+            Commands.sequence(
+                Commands.runOnce(() -> servos[4].setPosition(0.5)),
+                Commands.waitSeconds(0.5),
+                Commands.runOnce(() -> servos[3].setPosition(0.5)),
+                Commands.waitSeconds(0.5),
+                Commands.runOnce(() -> servos[2].setPosition(0.5)),
+                Commands.waitSeconds(0.5),
+                Commands.runOnce(() -> servos[1].setPosition(0.5)),
+                Commands.waitSeconds(0.5),
+                Commands.runOnce(() -> servos[0].setPosition(0.5))));
     // controller
     //     .a()
     //     .whileTrue(
