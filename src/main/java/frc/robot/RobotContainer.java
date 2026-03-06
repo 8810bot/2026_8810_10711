@@ -223,17 +223,6 @@ public class RobotContainer {
     feeder.setDefaultCommand(new DefaultFeederCommand(feeder));
     indexer.setDefaultCommand(new DefaultIndexerCommand(indexer));
 
-    // // PWM 舵机：仪表盘实时调节 (通过 Trigger 单次触发，测试用，同时控制所有舵机)
-    // new edu.wpi.first.wpilibj2.command.button.Trigger(() -> servoPosition.hasChanged(0))
-    //     .onTrue(
-    //         Commands.runOnce(
-    //             () -> {
-    //               double pos = servoPosition.get();
-    //               for (edu.wpi.first.wpilibj.PWM servo : servos) {
-    //                 servo.setPosition(pos);
-    //               }
-    //               Logger.recordOutput("Servo/SetPosition", pos);
-    //             }));
 
     // IndexerUp：仪表盘实时调节电压
     new edu.wpi.first.wpilibj2.command.button.Trigger(() -> indexerUpVolts.hasChanged(0))
@@ -361,7 +350,8 @@ public class RobotContainer {
                 this,
                 () -> shooterVelRpsTunable.get(),
                 () -> hoodAngleDegTunable.get(),
-                () -> indexerUpVolts.get()));
+                () -> indexerUpVolts.get()).andThen(new InstantCommand(()->intake.setVoltage(7),intake)));
+
                 controller.povUp().onTrue(hopper.runServoDeploySequence());
                 controller.povDown().onTrue(hopper.runServoRestoreSequence());
     // controller

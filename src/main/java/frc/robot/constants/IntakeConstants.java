@@ -43,7 +43,7 @@ public final class IntakeConstants {
 
   /** Deploy position when stowed / hovering (mechanism rotations). */
   public static final double DEPLOY_POS_UP_ROT =
-      edu.wpi.first.math.util.Units.degreesToRotations(-23);
+      edu.wpi.first.math.util.Units.degreesToRotations(23);
 
   public static final double DEPLOY_POS_DEBUG_ROT =
       edu.wpi.first.math.util.Units.degreesToRotations(40);
