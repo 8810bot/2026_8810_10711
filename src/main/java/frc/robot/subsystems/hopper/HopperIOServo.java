@@ -5,13 +5,7 @@ import edu.wpi.first.wpilibj.PWM;
 
 /** Hopper IO that combines CANrange sensing with PWM servo control. */
 public class HopperIOServo extends HopperIOCANrange {
-  private final PWM[] servos = {
-    new PWM(0),
-    new PWM(1),
-    new PWM(2),
-    new PWM(3),
-    new PWM(4)
-  };
+  private final PWM[] servos = {new PWM(0), new PWM(1), new PWM(2), new PWM(3), new PWM(4)};
 
   public HopperIOServo() {
     for (PWM servo : servos) {

@@ -45,6 +45,8 @@ public final class IntakeConstants {
   public static final double DEPLOY_POS_UP_ROT =
       edu.wpi.first.math.util.Units.degreesToRotations(23);
 
+  public static final double DEPLOY_FLICK_UP = edu.wpi.first.math.util.Units.degreesToRotations(55);
+
   public static final double DEPLOY_POS_DEBUG_ROT =
       edu.wpi.first.math.util.Units.degreesToRotations(40);
   /** Deploy position when deployed down for intaking (mechanism rotations). */
@@ -71,10 +73,19 @@ public final class IntakeConstants {
   public static final double DEPLOY_PEAK_TORQUECURRENT_REVERSE = -60;
 
   // Flick/backfeed behavior (间歇性收放拨球) - simple oscillation
-  public static final double FLICK_ON_SEC = 0.6;
-  public static final double FLICK_OFF_SEC = 0.6;
+  /** Max time allowed to travel toward flick up target (seconds). */
+  public static final double FLICK_TRAVEL_UP_SEC = 0.7;
+  /** Max time allowed to travel toward flick down target (seconds). */
+  public static final double FLICK_TRAVEL_DOWN_SEC = 0.7;
+  /** Hold time at flick up target once reached (seconds). */
+  public static final double FLICK_HOLD_UP_SEC = 0.2;
+  /** Hold time at flick down target once reached (seconds). */
+  public static final double FLICK_HOLD_DOWN_SEC = 0.2;
+  /** Position tolerance for considering deploy at target (mechanism rotations). */
+  public static final double FLICK_POS_TOLERANCE_ROT =
+      edu.wpi.first.math.util.Units.degreesToRotations(2.0);
   /** In flick mode, rollers voltage (volts). TODO tune (can be 0 or slight reverse). */
-  public static final double FLICK_ROLLER_VOLTS = 0.0;
+  public static final double FLICK_ROLLER_VOLTS = 5.0;
 
   // Shot-linked stow (射球时：根据射球数量"越收越回")
   /**

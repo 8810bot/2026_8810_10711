@@ -163,8 +163,8 @@ public final class Constants {
     public static final double EXIT_HOOD_DEG_TOL = 2.0;
 
     public static final double TRIGGER_AXIS_THRESHOLD = 0.25;
-    public static final double FEEDER_RPS = 30.0;
-    public static final double INDEXER_VOLTS = 10.0;
+    public static final double FEEDER_RPS = 40.0;
+    public static final double INDEXER_VOLTS = 6;
 
     private MegaTrackIterativeCommandConstants() {}
   }

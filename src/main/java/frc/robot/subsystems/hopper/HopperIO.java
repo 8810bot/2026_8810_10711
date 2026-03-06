@@ -21,6 +21,7 @@ public interface HopperIO {
 
     /** Last commanded servo positions in WPILib normalized range [0, 1]. */
     public double servo1Position = 0.0;
+
     public double servo2Position = 0.0;
     public double servo3Position = 0.0;
     public double servo4Position = 0.0;

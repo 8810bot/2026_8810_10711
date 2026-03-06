@@ -33,7 +33,6 @@ import frc.robot.commands.DefaultFeederCommand;
 import frc.robot.commands.DefaultIndexerCommand;
 import frc.robot.commands.DriveCommands;
 import frc.robot.commands.LEDDefaultCommand;
-import frc.robot.commands.ManualShootCommand;
 import frc.robot.commands.MegaTrackIterativeCommand;
 import frc.robot.commands.SmashBumpCommand;
 import frc.robot.commands.SmashTrenchCommand;
@@ -66,7 +65,6 @@ import frc.robot.subsystems.shooter.ShooterIO;
 import frc.robot.subsystems.shooter.ShooterIOTalonFX;
 import frc.robot.util.LoggedTunableNumber;
 import java.util.function.DoubleSupplier;
-import org.littletonrobotics.junction.Logger;
 import org.littletonrobotics.junction.networktables.LoggedDashboardChooser;
 
 /**
@@ -88,6 +86,12 @@ public class RobotContainer {
   private LoggedTunableNumber testFeederVel = new LoggedTunableNumber("TestShoot/FeederVelRPS", 20);
   private LoggedTunableNumber testIndexerVolts =
       new LoggedTunableNumber("TestShoot/IndexerVolts", 3.0);
+  private final LoggedTunableNumber leftBumperFeederRps =
+      new LoggedTunableNumber(
+          "LeftBumper/FeederRps", Constants.MegaTrackIterativeCommandConstants.FEEDER_RPS);
+  private final LoggedTunableNumber leftBumperIndexerVolts =
+      new LoggedTunableNumber(
+          "LeftBumper/IndexerVolts", Constants.MegaTrackIterativeCommandConstants.INDEXER_VOLTS);
   // ---- IndexerUp 独立电压控制 ----
   /** 仪表盘实时调节 IndexerUp 电压 (volts) */
   private final LoggedTunableNumber indexerUpVolts =
@@ -223,7 +227,6 @@ public class RobotContainer {
     feeder.setDefaultCommand(new DefaultFeederCommand(feeder));
     indexer.setDefaultCommand(new DefaultIndexerCommand(indexer));
 
-
     // IndexerUp：仪表盘实时调节电压
     new edu.wpi.first.wpilibj2.command.button.Trigger(() -> indexerUpVolts.hasChanged(0))
         .onTrue(
@@ -326,8 +329,8 @@ public class RobotContainer {
             Commands.run(
                 () -> {
                   intake.setWantedState(Intake.WantedState.FLICK_BACK);
-                  feeder.setVelocity(Constants.MegaTrackIterativeCommandConstants.FEEDER_RPS);
-                  indexer.setVoltage(Constants.MegaTrackIterativeCommandConstants.INDEXER_VOLTS);
+                  feeder.setVelocity(leftBumperFeederRps.get());
+                  indexer.setVoltage(leftBumperIndexerVolts.get());
                 },
                 intake,
                 feeder,
@@ -342,18 +345,37 @@ public class RobotContainer {
                 intake,
                 feeder,
                 indexer));
+    controller
+        .rightTrigger()
+        .whileTrue(
+            Commands.run(
+                () -> {
+                  intake.setWantedState(Intake.WantedState.FLICK_BACK);
+                },
+                intake))
+        .onFalse(
+            Commands.runOnce(
+                () -> {
+                  intake.setWantedState(Intake.WantedState.UP_STOW_STOP);
+                },
+                intake));
     // 手动发射 (无自瞄，NT4 可调参数: Shooter/VelRps, Hood/AngleDeg)
+    // controller
+    //     .rightBumper()
+    //     .whileTrue(
+    //         new ManualShootCommand(
+    //                 this,
+    //                 () -> shooterVelRpsTunable.get(),
+    //                 () -> hoodAngleDegTunable.get(),
+    //                 () -> indexerUpVolts.get())
+    //             .andThen(new InstantCommand(() -> intake.setVoltage(7), intake)));
+
     controller
         .rightBumper()
-        .whileTrue(
-            new ManualShootCommand(
-                this,
-                () -> shooterVelRpsTunable.get(),
-                () -> hoodAngleDegTunable.get(),
-                () -> indexerUpVolts.get()).andThen(new InstantCommand(()->intake.setVoltage(7),intake)));
-
-                controller.povUp().onTrue(hopper.runServoDeploySequence());
-                controller.povDown().onTrue(hopper.runServoRestoreSequence());
+        .whileTrue(new InstantCommand(() -> shooter.setVelocity(50), shooter))
+        .onFalse(new InstantCommand(() -> shooter.stop(), shooter));
+    controller.povUp().onTrue(hopper.runServoDeploySequence());
+    controller.povDown().onTrue(hopper.runServoRestoreSequence());
     // controller
     //     .a()
     //     .whileTrue(

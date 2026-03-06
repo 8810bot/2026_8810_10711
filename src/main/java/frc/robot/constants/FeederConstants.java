@@ -43,7 +43,7 @@ public final class FeederConstants {
 
   // Current limits (amps)
   public static final boolean ENABLE_SUPPLY_CURRENT_LIMIT = true;
-  public static final double SUPPLY_CURRENT_LIMIT_AMPS = 30.0;
+  public static final double SUPPLY_CURRENT_LIMIT_AMPS = 40.0;
   public static final double SUPPLY_CURRENT_LOWER_LIMIT_AMPS = 30.0;
   public static final double SUPPLY_CURRENT_LOWER_TIME_SEC = 1.0;
 

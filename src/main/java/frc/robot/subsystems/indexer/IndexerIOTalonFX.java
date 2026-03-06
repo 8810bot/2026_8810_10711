@@ -97,6 +97,7 @@ public class IndexerIOTalonFX implements IndexerIO {
   @Override
   public void setVoltage(double volts) {
     motor1.setControl(voltageReq1.withOutput(volts));
+    motorUp.setControl(voltageReqUp.withOutput(volts));
   }
 
   @Override

@@ -30,9 +30,15 @@ public class Intake extends SubsystemBase {
   // Shot-linked stow
   private int shotCount = 0;
 
-  // Flick timing
-  private boolean flickDownPhase = false;
-  private double nextFlickToggleTs = 0.0;
+  private enum FlickPhase {
+    MOVING_UP,
+    HOLDING_UP,
+    MOVING_DOWN,
+    HOLDING_DOWN
+  }
+
+  private FlickPhase flickPhase = FlickPhase.MOVING_UP;
+  private double flickPhaseStartTs = 0.0;
 
   public Intake(IntakeIO io) {
     this.io = io;
@@ -55,8 +61,7 @@ public class Intake extends SubsystemBase {
       wantedState = state;
       // Reset flick when entering flick mode
       if (wantedState == WantedState.FLICK_BACK) {
-        flickDownPhase = false;
-        nextFlickToggleTs = Timer.getFPGATimestamp();
+        resetFlickState();
       }
     }
   }
@@ -107,14 +112,12 @@ public class Intake extends SubsystemBase {
       }
       case FLICK_BACK -> {
         double now = Timer.getFPGATimestamp();
-        if (now >= nextFlickToggleTs) {
-          flickDownPhase = !flickDownPhase;
-          nextFlickToggleTs =
-              now + (flickDownPhase ? IntakeConstants.FLICK_ON_SEC : IntakeConstants.FLICK_OFF_SEC);
-        }
-        deployPosRotSetpoint =
-            flickDownPhase ? IntakeConstants.FLIP_POS_UP : IntakeConstants.DEPLOY_POS_UP_ROT;
+        updateFlickPhase(now);
+        deployPosRotSetpoint = getFlickTargetForPhase(flickPhase);
         rollerVoltsSetpoint = IntakeConstants.FLICK_ROLLER_VOLTS;
+
+        Logger.recordOutput("Intake/Flick/Phase", flickPhase.toString());
+        Logger.recordOutput("Intake/Flick/PhaseStartTs", flickPhaseStartTs);
       }
     }
 
@@ -124,5 +127,56 @@ public class Intake extends SubsystemBase {
 
   public void stop() {
     setWantedState(WantedState.UP_STOW_STOP);
+  }
+
+  private void resetFlickState() {
+    flickPhase = FlickPhase.MOVING_UP;
+    flickPhaseStartTs = Timer.getFPGATimestamp();
+  }
+
+  private void updateFlickPhase(double now) {
+    switch (flickPhase) {
+      case MOVING_UP -> {
+        if (isDeployAtTarget(IntakeConstants.DEPLOY_FLICK_UP)) {
+          flickPhase = FlickPhase.HOLDING_UP;
+          flickPhaseStartTs = now;
+        } else if ((now - flickPhaseStartTs) >= IntakeConstants.FLICK_TRAVEL_UP_SEC) {
+          flickPhase = FlickPhase.MOVING_DOWN;
+          flickPhaseStartTs = now;
+        }
+      }
+      case HOLDING_UP -> {
+        if ((now - flickPhaseStartTs) >= IntakeConstants.FLICK_HOLD_UP_SEC) {
+          flickPhase = FlickPhase.MOVING_DOWN;
+          flickPhaseStartTs = now;
+        }
+      }
+      case MOVING_DOWN -> {
+        if (isDeployAtTarget(IntakeConstants.FLIP_POS_UP)) {
+          flickPhase = FlickPhase.HOLDING_DOWN;
+          flickPhaseStartTs = now;
+        } else if ((now - flickPhaseStartTs) >= IntakeConstants.FLICK_TRAVEL_DOWN_SEC) {
+          flickPhase = FlickPhase.MOVING_UP;
+          flickPhaseStartTs = now;
+        }
+      }
+      case HOLDING_DOWN -> {
+        if ((now - flickPhaseStartTs) >= IntakeConstants.FLICK_HOLD_DOWN_SEC) {
+          flickPhase = FlickPhase.MOVING_UP;
+          flickPhaseStartTs = now;
+        }
+      }
+    }
+  }
+
+  private double getFlickTargetForPhase(FlickPhase phase) {
+    return switch (phase) {
+      case MOVING_UP, HOLDING_UP -> IntakeConstants.DEPLOY_FLICK_UP;
+      case MOVING_DOWN, HOLDING_DOWN -> IntakeConstants.FLIP_POS_UP;
+    };
+  }
+
+  private boolean isDeployAtTarget(double targetRot) {
+    return Math.abs(inputs.deployPositionRot - targetRot) <= IntakeConstants.FLICK_POS_TOLERANCE_ROT;
   }
 }

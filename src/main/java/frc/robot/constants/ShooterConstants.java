@@ -24,12 +24,12 @@ public final class ShooterConstants {
   public static final int FLYWHEEL_2_FOLLOWER_ID = 16;
 
   // Motor directions
-  public static final boolean FLYWHEEL_LEADER_INVERTED = false;
+  public static final boolean FLYWHEEL_LEADER_INVERTED = true;
 
   public static final MotorAlignmentValue FLYWHEEL_1_FOLLOWER_INVERTED =
       MotorAlignmentValue.Aligned;
   public static final MotorAlignmentValue FLYWHEEL_2_FOLLOWER_INVERTED =
-      MotorAlignmentValue.Aligned;
+      MotorAlignmentValue.Opposed;
 
   // Gear ratios (motor rotations per mechanism rotation)
   public static final double FLYWHEEL_SENSOR_TO_MECH_RATIO = 30. / 24.;

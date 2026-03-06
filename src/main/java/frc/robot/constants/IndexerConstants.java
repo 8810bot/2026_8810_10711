@@ -31,7 +31,7 @@ public final class IndexerConstants {
 
   // Current limits (amps)
   public static final boolean ENABLE_SUPPLY_CURRENT_LIMIT = true;
-  public static final double SUPPLY_CURRENT_LIMIT_AMPS = 70.0;
+  public static final double SUPPLY_CURRENT_LIMIT_AMPS = 50.0;
   public static final double SUPPLY_CURRENT_LOWER_LIMIT_AMPS = 70.0;
   public static final double SUPPLY_CURRENT_LOWER_TIME_SEC = 0.1;
 
