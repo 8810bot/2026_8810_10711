@@ -3,41 +3,25 @@
   "waypoints": [
     {
       "anchor": {
-        "x": 4.444014900662252,
-        "y": 7.556067880794702
+        "x": 1.0,
+        "y": 0.6910913930789695
       },
       "prevControl": null,
       "nextControl": {
-        "x": 5.535546468834866,
-        "y": 7.368145192085948
+        "x": 1.571401952085182,
+        "y": 1.0049600709849154
       },
       "isLocked": false,
-      "linkedName": null
+      "linkedName": "simpleend"
     },
     {
       "anchor": {
-        "x": 7.667425496688741,
-        "y": 6.9607533112582765
+        "x": 1.6224223602484464,
+        "y": 1.1981100266193425
       },
       "prevControl": {
-        "x": 7.188968849766062,
-        "y": 7.531319345023953
-      },
-      "nextControl": {
-        "x": 7.994414391572113,
-        "y": 6.570814623941477
-      },
-      "isLocked": false,
-      "linkedName": "qwwsc"
-    },
-    {
-      "anchor": {
-        "x": 6.9143416370106765,
-        "y": 5.288446026097272
-      },
-      "prevControl": {
-        "x": 6.897638906803516,
-        "y": 6.15785994521221
+        "x": 1.1797870452528827,
+        "y": 0.916433007985803
       },
       "nextControl": null,
       "isLocked": false,
@@ -58,13 +42,13 @@
   },
   "goalEndState": {
     "velocity": 0,
-    "rotation": -90.0
+    "rotation": 20.0
   },
   "reversed": false,
-  "folder": null,
+  "folder": "Boom",
   "idealStartingState": {
     "velocity": 0,
-    "rotation": -90.0
+    "rotation": 180.0
   },
-  "useDefaultConstraints": false
+  "useDefaultConstraints": true
 }

@@ -93,7 +93,7 @@ public class FeederIOTalonFX implements FeederIO {
 
   @Override
   public void stop() {
-    motor1.stopMotor();
-    followerMotor1.stopMotor();
+    motor1.setVoltage(0);
+    followerMotor1.setVoltage(0);
   }
 }

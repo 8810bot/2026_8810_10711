@@ -344,8 +344,8 @@ public class Drive extends SubsystemBase {
       poseEstimator.updateWithTime(sampleTimestamps[i], rawGyroRotation, modulePositions);
     }
     updateFieldAccelerationEstimate();
-    updatePoseWithLimelightMegaTag2("limelight");
-    updatePoseWithLimelightMegaTag2("limelight-g");
+    updatePoseWithLimelightMegaTag2("limelight-l");
+    updatePoseWithLimelightMegaTag2("limelight-r");
 
     // Update gyro alert
     gyroDisconnectedAlert.set(!gyroInputs.connected && Constants.currentMode != Mode.SIM);

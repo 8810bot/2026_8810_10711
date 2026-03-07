@@ -1,9 +1,10 @@
 {
-  "robotWidth": 0.9,
-  "robotLength": 0.9,
+  "robotWidth": 0.917702,
+  "robotLength": 1.0259,
   "holonomicMode": true,
   "pathFolders": [
-    "Double Swipe"
+    "Double Swipe",
+    "Boom"
   ],
   "autoFolders": [],
   "defaultMaxVel": 3.0,

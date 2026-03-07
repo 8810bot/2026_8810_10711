@@ -14,6 +14,7 @@
 package frc.robot;
 
 import com.pathplanner.lib.auto.AutoBuilder;
+import com.pathplanner.lib.commands.PathPlannerAuto;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.wpilibj.DriverStation;
@@ -218,6 +219,7 @@ public class RobotContainer {
         "Drive SysId (Dynamic Forward)", drive.sysIdDynamic(SysIdRoutine.Direction.kForward));
     autoChooser.addOption(
         "Drive SysId (Dynamic Reverse)", drive.sysIdDynamic(SysIdRoutine.Direction.kReverse));
+    autoChooser.addOption("test", new PathPlannerAuto("test"));
 
     // Configure the button bindings
     configureButtonBindings();
@@ -374,28 +376,8 @@ public class RobotContainer {
         .rightBumper()
         .whileTrue(new InstantCommand(() -> shooter.setVelocity(50), shooter))
         .onFalse(new InstantCommand(() -> shooter.stop(), shooter));
-    controller.povUp().onTrue(hopper.runServoDeploySequence());
-    controller.povDown().onTrue(hopper.runServoRestoreSequence());
-    // controller
-    //     .a()
-    //     .whileTrue(
-    //         new MegaTrackIterativeCommand(this, true));
-
-    // Hold Y to spin up shooter + aim hood, and press right trigger to run feeder
-    // controller
-    //     .a()
-    //     .whileTrue(
-    //         Commands.defer(
-    //             () -> {
-    //               return new TestShootCommand(
-    //                   this,
-    //                   () -> testShooterVel.get(),
-    //                   () -> testHoodAngle.get(),
-    //                   testFeederVel.get(),
-    //                   testIndexerVolts.get(),
-    //                   0.25);
-    //             },
-    //             Set.of(shooter, hood, feeder, indexer)));
+    // controller.povUp().onTrue(hopper.runServoDeploySequence());
+    // controller.povDown().onTrue(hopper.runServoRestoreSequence());
   }
 
   /**

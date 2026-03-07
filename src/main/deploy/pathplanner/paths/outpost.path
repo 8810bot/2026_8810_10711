@@ -3,29 +3,29 @@
   "waypoints": [
     {
       "anchor": {
-        "x": 3.586113575865128,
-        "y": 0.6588997338065656
+        "x": 3.6263531499556345,
+        "y": 0.6910913930789695
       },
       "prevControl": null,
       "nextControl": {
-        "x": 2.525748730928159,
-        "y": 0.6990895876481675
+        "x": 4.626353149955636,
+        "y": 0.6910913930789695
       },
       "isLocked": false,
       "linkedName": null
     },
     {
       "anchor": {
-        "x": 2.7330346051464063,
-        "y": 0.6588997338065656
+        "x": 1.0,
+        "y": 0.6910913930789695
       },
       "prevControl": {
-        "x": 3.6696042840655343,
-        "y": 0.6201778205389541
+        "x": 0.0,
+        "y": 0.6910913930789696
       },
       "nextControl": null,
       "isLocked": false,
-      "linkedName": "aim1"
+      "linkedName": "simpleend"
     }
   ],
   "rotationTargets": [],
@@ -33,7 +33,7 @@
   "pointTowardsZones": [],
   "eventMarkers": [],
   "globalConstraints": {
-    "maxVelocity": 3.0,
+    "maxVelocity": 2.0,
     "maxAcceleration": 3.0,
     "maxAngularVelocity": 540.0,
     "maxAngularAcceleration": 720.0,
@@ -42,13 +42,13 @@
   },
   "goalEndState": {
     "velocity": 0,
-    "rotation": 0.0
+    "rotation": 180.0
   },
   "reversed": false,
-  "folder": "Double Swipe",
+  "folder": "Boom",
   "idealStartingState": {
     "velocity": 0,
-    "rotation": 0.0
+    "rotation": 180.0
   },
-  "useDefaultConstraints": true
+  "useDefaultConstraints": false
 }
