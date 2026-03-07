@@ -45,7 +45,7 @@ public final class IntakeConstants {
   public static final double DEPLOY_POS_UP_ROT =
       edu.wpi.first.math.util.Units.degreesToRotations(23);
 
-  public static final double DEPLOY_FLICK_UP = edu.wpi.first.math.util.Units.degreesToRotations(55);
+  public static final double DEPLOY_FLICK_UP = edu.wpi.first.math.util.Units.degreesToRotations(60);
 
   public static final double DEPLOY_POS_DEBUG_ROT =
       edu.wpi.first.math.util.Units.degreesToRotations(40);
@@ -56,8 +56,8 @@ public final class IntakeConstants {
   public static final double FLIP_POS_UP = edu.wpi.first.math.util.Units.degreesToRotations(0);
 
   // Motion Magic (mechanism rotations/sec and rotations/sec^2)
-  public static final double DEPLOY_MM_CRUISE_VELOCITY = 2.0;
-  public static final double DEPLOY_MM_ACCELERATION = 2.0;
+  public static final double DEPLOY_MM_CRUISE_VELOCITY = 6.0;
+  public static final double DEPLOY_MM_ACCELERATION = 4.0;
   public static final double DEPLOY_MM_JERK = 0.0;
 
   // Slot0 gains for MotionMagicTorqueCurrentFOC

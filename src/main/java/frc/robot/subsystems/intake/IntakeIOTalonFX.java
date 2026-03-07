@@ -40,6 +40,9 @@ public class IntakeIOTalonFX implements IntakeIO {
   private final StatusSignal<Voltage> deployAppliedVolts;
   private final StatusSignal<Current> deployCurrent;
 
+  private final StatusSignal<Double> deployClosedLoopReferenceRot;
+  private final StatusSignal<Double> deployClosedLoopReferenceSlopeRotPerSec;
+
   public IntakeIOTalonFX() {
     leader = new TalonFX(IntakeConstants.LEADER_MOTOR_ID, "mainCAN");
     deploy = new TalonFX(IntakeConstants.DEPLOY_MOTOR_ID, "mainCAN");
@@ -104,6 +107,8 @@ public class IntakeIOTalonFX implements IntakeIO {
     deployVelocity = deploy.getVelocity();
     deployAppliedVolts = deploy.getMotorVoltage();
     deployCurrent = deploy.getStatorCurrent();
+    deployClosedLoopReferenceRot = deploy.getClosedLoopReference();
+    deployClosedLoopReferenceSlopeRotPerSec = deploy.getClosedLoopReferenceSlope();
 
     BaseStatusSignal.setUpdateFrequencyForAll(
         50.0,
@@ -113,7 +118,9 @@ public class IntakeIOTalonFX implements IntakeIO {
         deployPosition,
         deployVelocity,
         deployAppliedVolts,
-        deployCurrent);
+        deployCurrent,
+        deployClosedLoopReferenceRot,
+        deployClosedLoopReferenceSlopeRotPerSec);
     // deploy.setPosition(1. / 4.);
   }
 
@@ -127,7 +134,9 @@ public class IntakeIOTalonFX implements IntakeIO {
             deployPosition,
             deployVelocity,
             deployAppliedVolts,
-            deployCurrent);
+            deployCurrent,
+            deployClosedLoopReferenceRot,
+            deployClosedLoopReferenceSlopeRotPerSec);
 
     inputs.leaderVelocityRadPerSec = Units.rotationsToRadians(leaderVelocity.getValueAsDouble());
     inputs.leaderAppliedVolts = leaderAppliedVolts.getValueAsDouble();
@@ -137,6 +146,10 @@ public class IntakeIOTalonFX implements IntakeIO {
     inputs.deployVelocityRotPerSec = deployVelocity.getValueAsDouble();
     inputs.deployAppliedVolts = deployAppliedVolts.getValueAsDouble();
     inputs.deployCurrentAmps = deployCurrent.getValueAsDouble();
+
+    inputs.deployClosedLoopReferenceRot = deployClosedLoopReferenceRot.getValueAsDouble();
+    inputs.deployClosedLoopReferenceSlopeRotPerSec =
+        deployClosedLoopReferenceSlopeRotPerSec.getValueAsDouble();
 
     inputs.connected = status.isOK();
   }
@@ -150,6 +163,16 @@ public class IntakeIOTalonFX implements IntakeIO {
   public void setDeployPositionRot(double rotations) {
     // Phoenix expects mechanism rotations after SensorToMechanismRatio
     deploy.setControl(deployMotionMagicReq.withPosition(rotations));
+  }
+
+  @Override
+  public void updateMotionMagicConfigs(double cruiseVelocity, double acceleration) {
+    var mm =
+        new MotionMagicConfigs()
+            .withMotionMagicCruiseVelocity(cruiseVelocity)
+            .withMotionMagicAcceleration(acceleration)
+            .withMotionMagicJerk(IntakeConstants.DEPLOY_MM_JERK);
+    deploy.getConfigurator().apply(mm, 0.050);
   }
 
   @Override

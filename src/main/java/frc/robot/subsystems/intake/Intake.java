@@ -4,6 +4,7 @@ import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.constants.IntakeConstants;
+import frc.robot.util.LoggedTunableNumber;
 import org.littletonrobotics.junction.Logger;
 
 public class Intake extends SubsystemBase {
@@ -44,6 +45,45 @@ public class Intake extends SubsystemBase {
     this.io = io;
   }
 
+  // NT4 可调参数 (Motion Magic)
+  private final LoggedTunableNumber mmCruiseVel =
+      new LoggedTunableNumber(
+          "Intake/MM_CruiseVelocity", IntakeConstants.DEPLOY_MM_CRUISE_VELOCITY);
+  private final LoggedTunableNumber mmAccel =
+      new LoggedTunableNumber("Intake/MM_Acceleration", IntakeConstants.DEPLOY_MM_ACCELERATION);
+
+  // NT4 可调参数 (用于测试 Flick 的四个阶段时长)
+  private final LoggedTunableNumber flickTravelUpSec =
+      new LoggedTunableNumber("Intake/Flick/TravelUpSec", IntakeConstants.FLICK_TRAVEL_UP_SEC);
+  private final LoggedTunableNumber flickTravelDownSec =
+      new LoggedTunableNumber("Intake/Flick/TravelDownSec", IntakeConstants.FLICK_TRAVEL_DOWN_SEC);
+  private final LoggedTunableNumber flickHoldUpSec =
+      new LoggedTunableNumber("Intake/Flick/HoldUpSec", IntakeConstants.FLICK_HOLD_UP_SEC);
+  private final LoggedTunableNumber flickHoldDownSec =
+      new LoggedTunableNumber("Intake/Flick/HoldDownSec", IntakeConstants.FLICK_HOLD_DOWN_SEC);
+
+  // NT4 可调参数 (Deploy 各位置角度 - 度数)
+  private final LoggedTunableNumber posDownDeg =
+      new LoggedTunableNumber(
+          "Intake/Pos/DownDeg",
+          edu.wpi.first.math.util.Units.rotationsToDegrees(IntakeConstants.DEPLOY_POS_DOWN_ROT));
+  private final LoggedTunableNumber posUpDeg =
+      new LoggedTunableNumber(
+          "Intake/Pos/UpDeg",
+          edu.wpi.first.math.util.Units.rotationsToDegrees(IntakeConstants.DEPLOY_POS_UP_ROT));
+  private final LoggedTunableNumber posDebugDeg =
+      new LoggedTunableNumber(
+          "Intake/Pos/DebugDeg",
+          edu.wpi.first.math.util.Units.rotationsToDegrees(IntakeConstants.DEPLOY_POS_DEBUG_ROT));
+  private final LoggedTunableNumber posFlickUpDeg =
+      new LoggedTunableNumber(
+          "Intake/Pos/FlickUpDeg",
+          edu.wpi.first.math.util.Units.rotationsToDegrees(IntakeConstants.DEPLOY_FLICK_UP));
+  private final LoggedTunableNumber posFlickDownDeg =
+      new LoggedTunableNumber(
+          "Intake/Pos/FlickDownDeg",
+          edu.wpi.first.math.util.Units.rotationsToDegrees(IntakeConstants.FLIP_POS_UP));
+
   @Override
   public void periodic() {
     io.updateInputs(inputs);
@@ -51,9 +91,22 @@ public class Intake extends SubsystemBase {
 
     applyWantedState();
 
+    // 如果 NT4 仪表盘上修改了 Motion Magic 参数，则实时下发给电机
+    LoggedTunableNumber.ifChanged(
+        hashCode(),
+        () -> io.updateMotionMagicConfigs(mmCruiseVel.get(), mmAccel.get()),
+        mmCruiseVel,
+        mmAccel);
+
     Logger.recordOutput("Intake/WantedState", wantedState.toString());
     Logger.recordOutput("Intake/RollerVoltsSetpoint", rollerVoltsSetpoint);
     Logger.recordOutput("Intake/DeployPosRotSetpoint", deployPosRotSetpoint);
+
+    // --- 日志记录 Motion Magic 的内部生成曲线，这会在 NT4 广播 ---
+    Logger.recordOutput("Intake/DeployClosedLoopReferenceRot", inputs.deployClosedLoopReferenceRot);
+    Logger.recordOutput(
+        "Intake/DeployClosedLoopReferenceVelocityRotPerSec",
+        inputs.deployClosedLoopReferenceSlopeRotPerSec);
   }
 
   public void setWantedState(WantedState state) {
@@ -84,21 +137,21 @@ public class Intake extends SubsystemBase {
   private void applyWantedState() {
     switch (wantedState) {
       case DOWN_INTAKE -> {
-        deployPosRotSetpoint = IntakeConstants.DEPLOY_POS_DOWN_ROT;
+        deployPosRotSetpoint = edu.wpi.first.math.util.Units.degreesToRotations(posDownDeg.get());
         rollerVoltsSetpoint = IntakeConstants.ROLLER_INTAKE_VOLTS;
       }
       case UP_STOW_STOP -> {
-        double baseUp = IntakeConstants.DEPLOY_POS_UP_ROT;
+        double baseUp = edu.wpi.first.math.util.Units.degreesToRotations(posUpDeg.get());
         deployPosRotSetpoint = baseUp;
         rollerVoltsSetpoint = IntakeConstants.ROLLER_STOP_VOLTS;
       }
       case UP_DEBUG -> {
-        double baseUp = IntakeConstants.DEPLOY_POS_DEBUG_ROT;
+        double baseUp = edu.wpi.first.math.util.Units.degreesToRotations(posDebugDeg.get());
         deployPosRotSetpoint = baseUp;
         rollerVoltsSetpoint = IntakeConstants.ROLLER_STOP_VOLTS;
       }
       case SHOT_LINKED_STOW -> {
-        double baseUp = IntakeConstants.DEPLOY_POS_UP_ROT;
+        double baseUp = edu.wpi.first.math.util.Units.degreesToRotations(posUpDeg.get());
         double extra =
             MathUtil.clamp(
                 shotCount * IntakeConstants.SHOOT_STOW_EXTRA_PER_SHOT_ROT,
@@ -137,31 +190,33 @@ public class Intake extends SubsystemBase {
   private void updateFlickPhase(double now) {
     switch (flickPhase) {
       case MOVING_UP -> {
-        if (isDeployAtTarget(IntakeConstants.DEPLOY_FLICK_UP)) {
+        if (isDeployAtTarget(
+            edu.wpi.first.math.util.Units.degreesToRotations(posFlickUpDeg.get()))) {
           flickPhase = FlickPhase.HOLDING_UP;
           flickPhaseStartTs = now;
-        } else if ((now - flickPhaseStartTs) >= IntakeConstants.FLICK_TRAVEL_UP_SEC) {
+        } else if ((now - flickPhaseStartTs) >= flickTravelUpSec.get()) {
           flickPhase = FlickPhase.MOVING_DOWN;
           flickPhaseStartTs = now;
         }
       }
       case HOLDING_UP -> {
-        if ((now - flickPhaseStartTs) >= IntakeConstants.FLICK_HOLD_UP_SEC) {
+        if ((now - flickPhaseStartTs) >= flickHoldUpSec.get()) {
           flickPhase = FlickPhase.MOVING_DOWN;
           flickPhaseStartTs = now;
         }
       }
       case MOVING_DOWN -> {
-        if (isDeployAtTarget(IntakeConstants.FLIP_POS_UP)) {
+        if (isDeployAtTarget(
+            edu.wpi.first.math.util.Units.degreesToRotations(posFlickDownDeg.get()))) {
           flickPhase = FlickPhase.HOLDING_DOWN;
           flickPhaseStartTs = now;
-        } else if ((now - flickPhaseStartTs) >= IntakeConstants.FLICK_TRAVEL_DOWN_SEC) {
+        } else if ((now - flickPhaseStartTs) >= flickTravelDownSec.get()) {
           flickPhase = FlickPhase.MOVING_UP;
           flickPhaseStartTs = now;
         }
       }
       case HOLDING_DOWN -> {
-        if ((now - flickPhaseStartTs) >= IntakeConstants.FLICK_HOLD_DOWN_SEC) {
+        if ((now - flickPhaseStartTs) >= flickHoldDownSec.get()) {
           flickPhase = FlickPhase.MOVING_UP;
           flickPhaseStartTs = now;
         }
@@ -171,12 +226,15 @@ public class Intake extends SubsystemBase {
 
   private double getFlickTargetForPhase(FlickPhase phase) {
     return switch (phase) {
-      case MOVING_UP, HOLDING_UP -> IntakeConstants.DEPLOY_FLICK_UP;
-      case MOVING_DOWN, HOLDING_DOWN -> IntakeConstants.FLIP_POS_UP;
+      case MOVING_UP, HOLDING_UP -> edu.wpi.first.math.util.Units.degreesToRotations(
+          posFlickUpDeg.get());
+      case MOVING_DOWN, HOLDING_DOWN -> edu.wpi.first.math.util.Units.degreesToRotations(
+          posFlickDownDeg.get());
     };
   }
 
   private boolean isDeployAtTarget(double targetRot) {
-    return Math.abs(inputs.deployPositionRot - targetRot) <= IntakeConstants.FLICK_POS_TOLERANCE_ROT;
+    return Math.abs(inputs.deployPositionRot - targetRot)
+        <= IntakeConstants.FLICK_POS_TOLERANCE_ROT;
   }
 }

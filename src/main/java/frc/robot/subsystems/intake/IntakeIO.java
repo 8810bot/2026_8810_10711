@@ -18,6 +18,10 @@ public interface IntakeIO {
     public double deployVelocityRotPerSec = 0.0;
     public double deployAppliedVolts = 0.0;
     public double deployCurrentAmps = 0.0;
+
+    // --- Motion Magic 参考轨迹 ---
+    public double deployClosedLoopReferenceRot = 0.0;
+    public double deployClosedLoopReferenceSlopeRotPerSec = 0.0;
   }
 
   public default void updateInputs(IntakeIOInputs inputs) {}
@@ -27,6 +31,8 @@ public interface IntakeIO {
 
   /** Set deploy/arm position target (mechanism rotations). */
   public default void setDeployPositionRot(double rotations) {}
+
+  public default void updateMotionMagicConfigs(double cruiseVelocity, double acceleration) {}
 
   public default void stop() {}
 }
