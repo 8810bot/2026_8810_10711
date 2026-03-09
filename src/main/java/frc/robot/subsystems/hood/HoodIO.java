@@ -42,5 +42,11 @@ public interface HoodIO {
     setHoodAngleDeg(deg);
   }
 
+  /** Run the hood with an open loop voltage */
+  default void setVoltage(double volts) {}
+
+  /** Zeroes the hood position (sets current position to 0 degrees). */
+  default void zeroPosition() {}
+
   default void stop() {}
 }

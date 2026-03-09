@@ -13,6 +13,8 @@
 
 package frc.robot.constants;
 
+import frc.robot.util.LoggedTunableNumber;
+
 /** Shared hood (angle adjustment) constants. Used by {@code Hood} subsystem. */
 public final class HoodConstants {
   // CAN IDs
@@ -23,20 +25,22 @@ public final class HoodConstants {
 
   // Gear ratio (motor rotations per mechanism rotation)
   public static final double SENSOR_TO_MECH_RATIO = 160. / 9. * 34. / 20. * 26. / 12.;
-
+  // public static final double SENSOR_TO_MECH_RATIO = 26. / 12. * 34. / 20.;
   // Motion Magic (mechanism rotations/sec and rotations/sec^2)
-  public static final double MM_CRUISE_VELOCITY = 0.5;
-  public static final double MM_ACCELERATION = 1.0;
-  public static final double MM_JERK = 0.0;
+  public static final LoggedTunableNumber MM_CRUISE_VELOCITY =
+      new LoggedTunableNumber("Hood/MMCruiseVelocity", 0.5);
+  public static final LoggedTunableNumber MM_ACCELERATION =
+      new LoggedTunableNumber("Hood/MMAcceleration", 1.0);
+  public static final LoggedTunableNumber MM_JERK = new LoggedTunableNumber("Hood/MMJerk", 0.0);
 
   // Closed-loop gains (Phoenix Slot0)
-  public static final double KP = 2300;
-  public static final double KI = 0.0;
-  public static final double KD = 230.0;
-  public static final double KS = 0.0;
-  public static final double KG = 2.0;
-  public static final double KV = 0.0;
-  public static final double KA = 0.0;
+  public static final LoggedTunableNumber KP = new LoggedTunableNumber("Hood/KP", 17500.0);
+  public static final LoggedTunableNumber KI = new LoggedTunableNumber("Hood/KI", 0.0);
+  public static final LoggedTunableNumber KD = new LoggedTunableNumber("Hood/KD", 100.0);
+  public static final LoggedTunableNumber KS = new LoggedTunableNumber("Hood/KS", 0.0);
+  public static final LoggedTunableNumber KG = new LoggedTunableNumber("Hood/KG", 5.0);
+  public static final LoggedTunableNumber KV = new LoggedTunableNumber("Hood/KV", 0.0);
+  public static final LoggedTunableNumber KA = new LoggedTunableNumber("Hood/KA", 0.0);
 
   private HoodConstants() {}
 }
