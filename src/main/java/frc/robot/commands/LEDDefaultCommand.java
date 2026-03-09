@@ -27,11 +27,11 @@ public class LEDDefaultCommand extends Command {
       return;
     }
 
-    if (robot.hopper.isFull()) {
-      robot.led.setSolid(0, 255, 0); // green
-    } else {
-      robot.led.setBlink(255, 80, 0, 0.15, 0.15); // orange blink
-    }
+    // if (robot.hopper.isFull()) {
+    //   robot.led.setSolid(0, 255, 0); // green
+    // } else {
+    robot.led.setBlink(255, 80, 0, 0.15, 0.15); // orange blink
+    // }
   }
 
   @Override

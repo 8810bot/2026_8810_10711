@@ -224,8 +224,8 @@ public class TestShootCommand extends Command {
     Logger.recordOutput("TestShoot/TableHoodDeg", AutoShootConstants.hoodAngleMap.get(distToHub));
 
     // Hopper status (sensor-only, no motors)
-    Logger.recordOutput("TestShoot/HopperFull", robotContainer.hopper.isFull());
-    Logger.recordOutput("TestShoot/HopperConnected", robotContainer.hopper.isConnected());
+    // Logger.recordOutput("TestShoot/HopperFull", robotContainer.hopper.isFull());
+    // Logger.recordOutput("TestShoot/HopperConnected", robotContainer.hopper.isConnected());
 
     // Feed control (right trigger gated)
     if (robotContainer.getRightTriggerAxisSupplier().getAsDouble() > triggerThreshold) {
