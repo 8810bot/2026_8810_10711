@@ -89,7 +89,7 @@ public class ManualShootCommand extends Command {
     // 进料逻辑
     if (shooting) {
       int totalShots = robot.shooter.getShots1() + robot.shooter.getShots2();
-      robot.intake.setWantedState(WantedState.FLICK_BACK);
+      // robot.intake.setWantedState(WantedState.FLICK_BACK);
       robot.intake.setShotCount(totalShots);
       robot.feeder.setVelocity(FEEDER_RPS);
       robot.indexer.setVoltage(INDEXER_VOLTS);

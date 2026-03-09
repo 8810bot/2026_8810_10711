@@ -34,6 +34,7 @@ import frc.robot.commands.DefaultFeederCommand;
 import frc.robot.commands.DefaultIndexerCommand;
 import frc.robot.commands.DriveCommands;
 import frc.robot.commands.LEDDefaultCommand;
+import frc.robot.commands.ManualShootCommand;
 import frc.robot.commands.MegaTrackIterativeCommand;
 import frc.robot.commands.SmashBumpCommand;
 import frc.robot.commands.SmashTrenchCommand;
@@ -50,9 +51,6 @@ import frc.robot.subsystems.feeder.FeederIOTalonFX;
 import frc.robot.subsystems.hood.Hood;
 import frc.robot.subsystems.hood.HoodIO;
 import frc.robot.subsystems.hood.HoodIOTalonFX;
-import frc.robot.subsystems.hopper.Hopper;
-import frc.robot.subsystems.hopper.HopperIO;
-import frc.robot.subsystems.hopper.HopperIOServo;
 import frc.robot.subsystems.indexer.Indexer;
 import frc.robot.subsystems.indexer.IndexerIO;
 import frc.robot.subsystems.indexer.IndexerIOTalonFX;
@@ -80,23 +78,13 @@ public class RobotContainer {
   // Dashboard tuning
   private LoggedTunableNumber hoodAngleDegTunable = new LoggedTunableNumber("Hood/AngleDeg", 0);
   private LoggedTunableNumber shooterVelRpsTunable = new LoggedTunableNumber("Shooter/VelRps", 0);
-  private LoggedTunableNumber testShooterVel =
-      new LoggedTunableNumber("TestShoot/ShooterVelRPS", 26.0);
-  private LoggedTunableNumber testHoodAngle =
-      new LoggedTunableNumber("TestShoot/HoodAngleDeg", 6.0);
-  private LoggedTunableNumber testFeederVel = new LoggedTunableNumber("TestShoot/FeederVelRPS", 20);
-  private LoggedTunableNumber testIndexerVolts =
-      new LoggedTunableNumber("TestShoot/IndexerVolts", 3.0);
-  private final LoggedTunableNumber leftBumperFeederRps =
-      new LoggedTunableNumber(
-          "LeftBumper/FeederRps", Constants.MegaTrackIterativeCommandConstants.FEEDER_RPS);
-  private final LoggedTunableNumber leftBumperIndexerVolts =
-      new LoggedTunableNumber(
-          "LeftBumper/IndexerVolts", Constants.MegaTrackIterativeCommandConstants.INDEXER_VOLTS);
+  private LoggedTunableNumber enableAutoAimTunable =
+      new LoggedTunableNumber("Shooter/EnableAutoAim", 0);
+
   // ---- IndexerUp 独立电压控制 ----
   /** 仪表盘实时调节 IndexerUp 电压 (volts) */
   private final LoggedTunableNumber indexerUpVolts =
-      new LoggedTunableNumber("IndexerUp/Volts", 0.0);
+      new LoggedTunableNumber("IndexerUp/Volts", 8.0);
 
   @SuppressWarnings("unused")
   public final Shooter shooter;
@@ -113,8 +101,8 @@ public class RobotContainer {
   @SuppressWarnings("unused")
   public final Indexer indexer;
 
-  @SuppressWarnings("unused")
-  public final Hopper hopper;
+  // @SuppressWarnings("unused")
+  // public final Hopper hopper;
 
   @SuppressWarnings("unused")
   public final LED led;
@@ -158,7 +146,7 @@ public class RobotContainer {
         intake = new Intake(new IntakeIOTalonFX());
 
         indexer = new Indexer(new IndexerIOTalonFX());
-        hopper = new Hopper(new HopperIOServo());
+        // hopper = new Hopper(new HopperIOServo());
         led = new LED(new LEDIO() {});
         break;
 
@@ -176,7 +164,7 @@ public class RobotContainer {
         feeder = new Feeder(new FeederIO() {});
         intake = new Intake(new IntakeIO() {});
         indexer = new Indexer(new IndexerIO() {});
-        hopper = new Hopper(new HopperIO() {});
+        // hopper = new Hopper(new HopperIO() {});
         led = new LED(new LEDIO() {});
         break;
 
@@ -194,7 +182,7 @@ public class RobotContainer {
         feeder = new Feeder(new FeederIO() {});
         intake = new Intake(new IntakeIO() {});
         indexer = new Indexer(new IndexerIO() {});
-        hopper = new Hopper(new HopperIO() {});
+        // hopper = new Hopper(new HopperIO() {});
         led = new LED(new LEDIO() {});
         break;
     }
@@ -220,6 +208,8 @@ public class RobotContainer {
     autoChooser.addOption(
         "Drive SysId (Dynamic Reverse)", drive.sysIdDynamic(SysIdRoutine.Direction.kReverse));
     autoChooser.addOption("test", new PathPlannerAuto("test"));
+    autoChooser.addOption("CIRCLE", new PathPlannerAuto("CIRCLE"));
+    autoChooser.addOption("straight", new PathPlannerAuto("straight"));
 
     // Configure the button bindings
     configureButtonBindings();
@@ -228,16 +218,16 @@ public class RobotContainer {
     led.setDefaultCommand(new LEDDefaultCommand(this));
     feeder.setDefaultCommand(new DefaultFeederCommand(feeder));
     indexer.setDefaultCommand(new DefaultIndexerCommand(indexer));
-
-    // IndexerUp：仪表盘实时调节电压
-    new edu.wpi.first.wpilibj2.command.button.Trigger(() -> indexerUpVolts.hasChanged(0))
-        .onTrue(
-            Commands.runOnce(
-                () -> {
-                  double volts = indexerUpVolts.get();
-                  indexer.setUpVoltage(volts);
-                }));
   }
+
+  // IndexerUp：仪表盘实时调节电压
+  //   new edu.wpi.first.wpilibj2.command.button.Trigger(() -> indexerUpVolts.hasChanged(0))
+  //       .onTrue(
+  //           Commands.runOnce(
+  //               () -> {
+  //                 double volts = indexerUpVolts.get();
+  //                 indexer.setUpVoltage(volts);
+  //               }));
 
   /**
    * Use this method to define your button->command mappings. Buttons can be created by
@@ -272,14 +262,24 @@ public class RobotContainer {
     //     .whileTrue(new InstantCommand(() -> shooter.setVelocity(shooterVelRpsTunable.get())));
     // controller.x().whileTrue(new InstantCommand(() -> hood.setAngle(hoodAngleDegTunable.get())));
 
-    // // Switch to X pattern when X button is pressed
+    // Switch to X pattern when X button is pressed
     // controller.x().onTrue(Commands.runOnce(drive::stopWithX, drive));
+
+    // LB 键：按下开吸球，松开停吸球 (保持在下面)
     controller
-        .x()
+        .leftBumper()
         .onTrue(new InstantCommand(() -> intake.setWantedState(Intake.WantedState.DOWN_INTAKE)));
     controller
+        .leftBumper()
+        .onFalse(new InstantCommand(() -> intake.setWantedState(Intake.WantedState.DOWN_IDLE)));
+
+    // X 键：按住收回 Intake 到抬升位置
+    controller
         .x()
-        .onFalse(new InstantCommand(() -> intake.setWantedState(Intake.WantedState.UP_STOW_STOP)));
+        .onTrue(new InstantCommand(() -> intake.setWantedState(Intake.WantedState.UP_STOW_STOP)));
+    controller
+        .x()
+        .onFalse(new InstantCommand(() -> intake.setWantedState(Intake.WantedState.DOWN_IDLE)));
     // controller
     //     .povDown()
     //     .onTrue(
@@ -288,6 +288,17 @@ public class RobotContainer {
     //               Logger.recordOutput(
     //                   "Bump/AlignPose", FieldConstants.getNearestTrenchPrePose(drive.getPose()));
     //             }));
+
+    // 按下手柄的十字键“下”时，读取 NT4 的设定值并调整 Hood 角度
+    controller
+        .povDown()
+        .onTrue(
+            new InstantCommand(
+                () -> {
+                  double deg = hoodAngleDegTunable.get();
+                  hood.setAngle(deg);
+                },
+                hood));
 
     // Reset gyro to 0° when B button is pressed
     controller
@@ -325,28 +336,28 @@ public class RobotContainer {
         .a()
         .onTrue(new InstantCommand(() -> intake.setWantedState(Intake.WantedState.UP_DEBUG)));
 
-    controller
-        .leftBumper()
-        .whileTrue(
-            Commands.run(
-                () -> {
-                  intake.setWantedState(Intake.WantedState.FLICK_BACK);
-                  feeder.setVelocity(leftBumperFeederRps.get());
-                  indexer.setVoltage(leftBumperIndexerVolts.get());
-                },
-                intake,
-                feeder,
-                indexer))
-        .onFalse(
-            Commands.runOnce(
-                () -> {
-                  intake.setWantedState(Intake.WantedState.UP_STOW_STOP);
-                  feeder.stop();
-                  indexer.stop();
-                },
-                intake,
-                feeder,
-                indexer));
+    // controller
+    //     .leftBumper()
+    //     .whileTrue(
+    //         Commands.run(
+    //             () -> {
+    //               intake.setWantedState(Intake.WantedState.FLICK_BACK);
+    //               feeder.setVelocity(leftBumperFeederRps.get());
+    //               indexer.setVoltage(leftBumperIndexerVolts.get());
+    //             },
+    //             intake,
+    //             feeder,
+    //             indexer))
+    //     .onFalse(
+    //         Commands.runOnce(
+    //             () -> {
+    //               intake.setWantedState(Intake.WantedState.UP_STOW_STOP);
+    //               feeder.stop();
+    //               indexer.stop();
+    //             },
+    //             intake,
+    //             feeder,
+    //             indexer));
     controller
         .rightTrigger()
         .whileTrue(
@@ -374,8 +385,15 @@ public class RobotContainer {
 
     controller
         .rightBumper()
-        .whileTrue(new InstantCommand(() -> shooter.setVelocity(50), shooter))
-        .onFalse(new InstantCommand(() -> shooter.stop(), shooter));
+        .whileTrue(
+            Commands.either(
+                new MegaTrackIterativeCommand(this, false),
+                new ManualShootCommand(
+                    this,
+                    () -> shooterVelRpsTunable.get(),
+                    () -> hoodAngleDegTunable.get(),
+                    () -> indexerUpVolts.get()),
+                () -> enableAutoAimTunable.get() > 0));
     // controller.povUp().onTrue(hopper.runServoDeploySequence());
     // controller.povDown().onTrue(hopper.runServoRestoreSequence());
   }
@@ -387,5 +405,11 @@ public class RobotContainer {
    */
   public Command getAutonomousCommand() {
     return autoChooser.get();
+  }
+
+  /** Called automatically when the robot is enabled (in Auto or Teleop). */
+  public void onEnable() {
+    // 自动将当前位置作为 Hood 的零点 (0度)
+    hood.zeroPosition();
   }
 }
