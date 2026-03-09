@@ -15,6 +15,11 @@ package frc.robot;
 
 import com.pathplanner.lib.auto.AutoBuilder;
 import com.pathplanner.lib.commands.PathPlannerAuto;
+import com.revrobotics.servohub.ServoChannel;
+import com.revrobotics.servohub.ServoChannel.ChannelId;
+import com.revrobotics.servohub.ServoHub;
+import com.revrobotics.servohub.config.ServoChannelConfig;
+import com.revrobotics.servohub.config.ServoHubConfig;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.wpilibj.DriverStation;
@@ -51,6 +56,9 @@ import frc.robot.subsystems.feeder.FeederIOTalonFX;
 import frc.robot.subsystems.hood.Hood;
 import frc.robot.subsystems.hood.HoodIO;
 import frc.robot.subsystems.hood.HoodIOTalonFX;
+import frc.robot.subsystems.hopper.Hopper;
+import frc.robot.subsystems.hopper.HopperIO;
+import frc.robot.subsystems.hopper.HopperIOReal;
 import frc.robot.subsystems.indexer.Indexer;
 import frc.robot.subsystems.indexer.IndexerIO;
 import frc.robot.subsystems.indexer.IndexerIOTalonFX;
@@ -101,8 +109,8 @@ public class RobotContainer {
   @SuppressWarnings("unused")
   public final Indexer indexer;
 
-  // @SuppressWarnings("unused")
-  // public final Hopper hopper;
+  @SuppressWarnings("unused")
+  public final Hopper hopper;
 
   @SuppressWarnings("unused")
   public final LED led;
@@ -128,8 +136,26 @@ public class RobotContainer {
   // Dashboard inputs
   private final LoggedDashboardChooser<Command> autoChooser;
 
+  ServoChannel m_channel5;
   /** The container for the robot. Contains subsystems, OI devices, and commands. */
   public RobotContainer() {
+    // if (true) {
+    //   ServoHub m_servoHub = new ServoHub(3);
+    //   ServoHubConfig config = new ServoHubConfig();
+    //   config
+    //       .channel5
+    //       .pulseRange(500, 1500, 2500)
+    //       .disableBehavior(ServoChannelConfig.BehaviorWhenDisabled.kSupplyPower);
+
+    //   // Persist parameters and reset any not explicitly set above to
+    //   // their defaults.
+    //   m_servoHub.configure(config, ServoHub.ResetMode.kResetSafeParameters);
+    //   m_channel5 = m_servoHub.getServoChannel(ChannelId.kChannelId5);
+    //   m_servoHub.setBankPulsePeriod(ServoHub.Bank.kBank3_5, 20000);
+    //   m_channel5.setPowered(true);
+    //   m_channel5.setEnabled(true);
+    // }
+
     switch (Constants.currentMode) {
       case REAL:
         // Real robot, instantiate hardware IO implementations
@@ -144,9 +170,8 @@ public class RobotContainer {
         hood = new Hood(new HoodIOTalonFX());
         feeder = new Feeder(new FeederIOTalonFX());
         intake = new Intake(new IntakeIOTalonFX());
-
+        hopper = new Hopper(new HopperIOReal());
         indexer = new Indexer(new IndexerIOTalonFX());
-        // hopper = new Hopper(new HopperIOServo());
         led = new LED(new LEDIO() {});
         break;
 
@@ -164,7 +189,7 @@ public class RobotContainer {
         feeder = new Feeder(new FeederIO() {});
         intake = new Intake(new IntakeIO() {});
         indexer = new Indexer(new IndexerIO() {});
-        // hopper = new Hopper(new HopperIO() {});
+        hopper = new Hopper(new HopperIO() {});
         led = new LED(new LEDIO() {});
         break;
 
@@ -182,7 +207,7 @@ public class RobotContainer {
         feeder = new Feeder(new FeederIO() {});
         intake = new Intake(new IntakeIO() {});
         indexer = new Indexer(new IndexerIO() {});
-        // hopper = new Hopper(new HopperIO() {});
+        hopper = new Hopper(new HopperIO() {});
         led = new LED(new LEDIO() {});
         break;
     }
@@ -330,8 +355,20 @@ public class RobotContainer {
     //                 drive)
     //             .ignoringDisable(true));
 
-    controller.y().whileTrue(new MegaTrackIterativeCommand(this, false));
-    controller.b().whileTrue(new MegaTrackIterativeCommand(this, true));
+    // if (m_channel5 != null) {
+    //   controller
+    //       .y()
+    //       .whileTrue(
+    //           new InstantCommand(() -> this.m_channel5.setPulseWidth(500))
+    //               .alongWith(new InstantCommand(() -> this.m_channel5.setPowered(true)))
+    //               .alongWith(new InstantCommand(() -> this.m_channel5.setEnabled(true))));
+    //   controller
+    //       .b()
+    //       .whileTrue(
+    //           new InstantCommand(() -> this.m_channel5.setPulseWidth(1500))
+    //               .alongWith(new InstantCommand(() -> this.m_channel5.setPowered(true)))
+    //               .alongWith(new InstantCommand(() -> this.m_channel5.setEnabled(true))));
+    // }
     controller
         .a()
         .onTrue(new InstantCommand(() -> intake.setWantedState(Intake.WantedState.UP_DEBUG)));

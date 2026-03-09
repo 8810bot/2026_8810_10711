@@ -49,7 +49,7 @@ public final class Constants {
   /** Tuning for trench traversal commands (SmashTrench, etc.). */
   public static final class TrenchCommandConstants {
     // ALIGN -> RUN transition tolerance
-    /** Lateral tolerance (meters) to enter RUN, measured 鉄?to approach direction. */
+    /** Lateral tolerance (meters) to enter RUN, measured 閴?to approach direction. */
     public static final double ALIGN_LATERAL_TOL_METERS = 0.03;
     /** Along-line tolerance (meters) to enter RUN, measured along approach direction. */
     public static final double ALIGN_ALONG_TOL_METERS = 0.05;
@@ -169,6 +169,46 @@ public final class Constants {
     private MegaTrackIterativeCommandConstants() {}
   }
 
+  /** Tuning for MegaTrackVelocityProfileCommand (iterative + profiled omega command). */
+  public static final class MegaTrackVelocityProfileCommandConstants {
+    public static final String LOG_PREFIX = "AutoShootVelProfile";
+
+    // Heading controller (PIDController)
+    public static final double HEADING_KP = 6.0;
+    public static final double HEADING_KI = 0.0;
+    public static final double HEADING_KD = 0.1;
+
+    // Fixed-point iteration tuning for flight time
+    public static final int MAX_ITERS = 12;
+    public static final double EPS_T_SEC = 1e-3;
+    public static final double RELAX = 0.7;
+    public static final double MIN_T_SEC = 0.0;
+    public static final double MAX_T_SEC = 2.0;
+
+    // Rotation profile limits
+    public static final double OMEGA_MAX_RAD_PER_SEC = Math.PI;
+    public static final double OMEGA_MAX_ACCEL_RAD_PER_SEC2 = 7.0;
+    public static final double MIN_OMEGA_FF_DIST_METERS = 0.40;
+    public static final boolean USE_ACCEL_IN_OMEGA_FF = false;
+
+    // Shoot gating
+    public static final double MIN_SHOOT_DIST_METERS = 0.8;
+    public static final double MAX_SHOOT_DIST_METERS = 5.8;
+    public static final double ENTER_HEADING_TOL_RAD = Math.toRadians(2.0);
+    public static final double EXIT_HEADING_TOL_RAD = Math.toRadians(4.0);
+    public static final double ENTER_FLYWHEEL_RPS_TOL = 1.5;
+    public static final double EXIT_FLYWHEEL_RPS_TOL = 12.0;
+    public static final double ENTER_HOOD_DEG_TOL = 1.0;
+    public static final double EXIT_HOOD_DEG_TOL = 2.0;
+    public static final double TRIGGER_AXIS_THRESHOLD = 0.25;
+
+    // Feed outputs
+    public static final double FEEDER_RPS = 40.0;
+    public static final double INDEXER_VOLTS = 6.0;
+
+    private MegaTrackVelocityProfileCommandConstants() {}
+  }
+
   public static enum Mode {
     /** Running on a real robot. */
     REAL,
@@ -195,7 +235,7 @@ public final class Constants {
     /**
      * Standoff distance before the trench along the chosen approach line.
      *
-     * <p>This is the "鍧″墠鎸囧畾浣嶇疆" distance.
+     * <p>This is the "閸р€冲閹稿洤鐣炬担宥囩枂" distance.
      */
     public static final double TRENCH_PRE_DISTANCE_METERS = 1.20;
 
@@ -311,7 +351,7 @@ public final class Constants {
 
     /**
      * 8 approach reference lines: for each trench, we provide two approach directions normal to the
-     * trench axis (axis +90 and axis -90). This matches the "8 鏉￠鐬勫弬鑰冪嚎" idea.
+     * trench axis (axis +90 and axis -90). This matches the "8 閺夛繝顣╅惉鍕棘閼板啰鍤? idea.
      *
      * <p>IMPORTANT: Segment direction = trench axis; Pose heading = approach direction.
      */
@@ -364,7 +404,7 @@ public final class Constants {
      * <ul>
      *   <li>Pick the line with smallest perpendicular distance to the robot translation
      *   <li>Tie-breaker prefers the line where the robot is \"behind\" the trench center relative
-     *       to the line direction (so the pre-pose is reachable without flipping 180掳)
+     *       to the line direction (so the pre-pose is reachable without flipping 180鎺?
      * </ul>
      */
     public static Pose2d getNearestTrenchPrePose(Pose2d robotPose) {
@@ -401,7 +441,7 @@ public final class Constants {
         return robotPose;
       }
 
-      // Keep translation on the chosen line, but snap the traverse heading to a 90掳 multiple.
+      // Keep translation on the chosen line, but snap the traverse heading to a 90鎺?multiple.
       Translation2d u = best.dirUnit();
       Translation2d prePoint = bestClosest.minus(u.times(TRENCH_PRE_DISTANCE_METERS));
       return new Pose2d(prePoint, snapTo90Deg(best.approachHeading()));
@@ -516,7 +556,7 @@ public final class Constants {
     /**
      * Returns the best "pre-bump" alignment pose by snapping to the nearest bump approach segment.
      *
-     * <p>NO 90掳 heading snap. Returned pose rotation equals chosen approach heading.
+     * <p>NO 90鎺?heading snap. Returned pose rotation equals chosen approach heading.
      */
     public static Pose2d getNearestBumpPrePose(Pose2d robotPose) {
       Translation2d p = robotPose.getTranslation();
@@ -633,7 +673,7 @@ public final class Constants {
     public static final double MAX_SHOOTING_VELOCITY = 3;
 
     static {
-      // Updated from shootmap.md (璺濈, 灏勬墜閫熷害, hood瑙掑害, 椋炶鏃堕棿)
+      // Updated from shootmap.md (鐠烘繄顬? 鐏忓嫭澧滈柅鐔峰, hood鐟欐帒瀹? 妞嬬偠顢戦弮鍫曟？)
       hoodAngleMap.put(1.405, 0.9);
       hoodAngleMap.put(2.031, 2.1);
       hoodAngleMap.put(2.725, 4.7);

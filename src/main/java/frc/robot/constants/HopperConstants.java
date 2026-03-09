@@ -20,6 +20,9 @@ public final class HopperConstants {
 
   public static final int CANRANGE_2_ID = 0;
 
+  /** REV Servo Hub CAN device ID. */
+  public static final int SERVO_HUB_CAN_ID = 3;
+
   /** Distance threshold (meters) for "piece present". Tune on your robot. */
   public static final double DETECTION_DISTANCE_METERS = 0.25;
 

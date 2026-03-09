@@ -15,7 +15,7 @@ import org.littletonrobotics.junction.Logger;
  */
 public class Hopper extends SubsystemBase {
   private final HopperIO io;
-  private final HopperIO.HopperIOInputs inputs = new HopperIO.HopperIOInputs();
+  private final HopperIOInputsAutoLogged inputs = new HopperIOInputsAutoLogged();
 
   private final Debouncer fullDebouncer =
       new Debouncer(HopperConstants.FULL_DEBOUNCE_SEC, Debouncer.DebounceType.kBoth);
@@ -36,6 +36,10 @@ public class Hopper extends SubsystemBase {
 
     Logger.recordOutput("Hopper/FullRaw", fullRaw);
     Logger.recordOutput("Hopper/Full", full);
+    Logger.recordOutput("Hopper/Connected", inputs.connected);
+    Logger.recordOutput("Hopper/CANRange1Connected", inputs.canRange1Connected);
+    Logger.recordOutput("Hopper/CANRange2Connected", inputs.canRange2Connected);
+    Logger.recordOutput("Hopper/ServoHubConnected", inputs.servoHubConnected);
   }
 
   /** True if hopper is full (debounced). */

@@ -184,6 +184,7 @@ spotless {
             exclude "**/build/**", "**/build-*/**"
         }
         toggleOffOn()
+        replaceRegex("removeUtf8Bom", "^\uFEFF", "")
         googleJavaFormat()
         removeUnusedImports()
         trimTrailingWhitespace()

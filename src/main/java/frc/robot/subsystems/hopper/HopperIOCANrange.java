@@ -31,6 +31,8 @@ public class HopperIOCANrange implements HopperIO {
     inputs.distance2Meters = d2;
     inputs.detected1 = d1 > 0.0 && d1 <= HopperConstants.DETECTION_DISTANCE_METERS;
     inputs.detected2 = d2 > 0.0 && d2 <= HopperConstants.DETECTION_DISTANCE_METERS;
-    inputs.connected = status1.isOK() && status2.isOK();
+    inputs.canRange1Connected = status1.isOK();
+    inputs.canRange2Connected = status2.isOK();
+    inputs.connected = inputs.canRange1Connected && inputs.canRange2Connected;
   }
 }
