@@ -12,9 +12,11 @@ public class Intake extends SubsystemBase {
   private final IntakeIOInputsAutoLogged inputs = new IntakeIOInputsAutoLogged();
 
   public enum WantedState {
+    /** 向下放 + 停止吸球 (默认状态) */
+    DOWN_IDLE,
     /** 向下放 + 吸球 */
     DOWN_INTAKE,
-    /** 向上收回 + 停止吸球 */
+    /** 向上收回 + 停止吸球 (原默认状态) */
     UP_STOW_STOP,
     /** 射球时：根据射球数量“越收越回” */
     SHOT_LINKED_STOW,
@@ -23,7 +25,7 @@ public class Intake extends SubsystemBase {
     FLICK_BACK
   }
 
-  private WantedState wantedState = WantedState.UP_STOW_STOP;
+  private WantedState wantedState = WantedState.DOWN_IDLE;
 
   private double rollerVoltsSetpoint = 0.0;
   private double deployPosRotSetpoint = 0.0;
@@ -61,6 +63,10 @@ public class Intake extends SubsystemBase {
       new LoggedTunableNumber("Intake/Flick/HoldUpSec", IntakeConstants.FLICK_HOLD_UP_SEC);
   private final LoggedTunableNumber flickHoldDownSec =
       new LoggedTunableNumber("Intake/Flick/HoldDownSec", IntakeConstants.FLICK_HOLD_DOWN_SEC);
+
+  // NT4 吸球转速 (电压)
+  private final LoggedTunableNumber intakeVolts =
+      new LoggedTunableNumber("Intake/RollerIntakeVolts", IntakeConstants.ROLLER_INTAKE_VOLTS);
 
   // NT4 可调参数 (Deploy 各位置角度 - 度数)
   private final LoggedTunableNumber posDownDeg =
@@ -136,9 +142,13 @@ public class Intake extends SubsystemBase {
 
   private void applyWantedState() {
     switch (wantedState) {
+      case DOWN_IDLE -> {
+        deployPosRotSetpoint = edu.wpi.first.math.util.Units.degreesToRotations(posDownDeg.get());
+        rollerVoltsSetpoint = IntakeConstants.ROLLER_STOP_VOLTS;
+      }
       case DOWN_INTAKE -> {
         deployPosRotSetpoint = edu.wpi.first.math.util.Units.degreesToRotations(posDownDeg.get());
-        rollerVoltsSetpoint = IntakeConstants.ROLLER_INTAKE_VOLTS;
+        rollerVoltsSetpoint = intakeVolts.get();
       }
       case UP_STOW_STOP -> {
         double baseUp = edu.wpi.first.math.util.Units.degreesToRotations(posUpDeg.get());
@@ -179,7 +189,7 @@ public class Intake extends SubsystemBase {
   }
 
   public void stop() {
-    setWantedState(WantedState.UP_STOW_STOP);
+    setWantedState(WantedState.DOWN_IDLE);
   }
 
   private void resetFlickState() {
