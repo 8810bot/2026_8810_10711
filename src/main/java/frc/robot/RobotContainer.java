@@ -279,7 +279,8 @@ public class RobotContainer {
 
     // Debug: log nearest trench pre-align pose
     controller.rightStick().whileTrue(new SmashBumpCommand(this));
-    controller.leftStick().whileTrue(new SmashTrenchCommand(this));
+    controller.leftStick().whileTrue(new SmashTrenchCommand(this)
+                          .alongWith(new InstantCommand(() -> hopper.setTargetState(Hopper.HopperTargetState.MID_INTAKE), hopper)));
 
     // Manual tuning buttons
     // controller
@@ -290,13 +291,15 @@ public class RobotContainer {
     // Switch to X pattern when X button is pressed
     // controller.x().onTrue(Commands.runOnce(drive::stopWithX, drive));
 
-    // LB 键：按下开吸球，松开停吸球 (保持在下面)
+    // LB 键：按下开吸球，松开停吸球 (保持在下面) + Hopper 同步切换到中间位置 防止球飞出；松开时 Hopper 切回上面位置
     controller
         .leftBumper()
-        .onTrue(new InstantCommand(() -> intake.setWantedState(Intake.WantedState.DOWN_INTAKE)));
+        .onTrue(new InstantCommand(() -> intake.setWantedState(Intake.WantedState.DOWN_INTAKE))
+        .alongWith(new InstantCommand(() -> hopper.setTargetState(Hopper.HopperTargetState.MID_INTAKE), hopper)));
     controller
         .leftBumper()
-        .onFalse(new InstantCommand(() -> intake.setWantedState(Intake.WantedState.DOWN_IDLE)));
+        .onFalse(new InstantCommand(() -> intake.setWantedState(Intake.WantedState.DOWN_IDLE))
+        .alongWith(new InstantCommand(() -> hopper.setTargetState(Hopper.HopperTargetState.UP_DEPLOY), hopper)));
 
     // X 键：按住收回 Intake 到抬升位置
     controller
