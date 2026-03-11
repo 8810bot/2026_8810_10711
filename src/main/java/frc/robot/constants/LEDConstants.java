@@ -16,7 +16,7 @@ package frc.robot.constants;
 /** LED (CANdle) constants. */
 public final class LEDConstants {
   /** TODO: set to your CANdle CAN ID. */
-  public static final int CANDLE_ID = 0;
+  public static final int CANDLE_ID = 60;
 
   /** Indices 0-7 onboard, 8-399 strip. Tune to your wiring. */
   public static final int LED_START_INDEX = 8;
