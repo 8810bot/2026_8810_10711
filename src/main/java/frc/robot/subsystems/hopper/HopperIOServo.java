@@ -22,11 +22,11 @@ public class HopperIOServo extends HopperIOCANrange {
   public HopperIOServo() {
     configureServoHubChannels();
 
+    // 上电时只使能通道，不发送脉宽指令，舵机保持当前物理位置
     for (int index = 0; index < servos.length; index++) {
       ServoChannel channel = servoHub.getServoChannel(ServoChannel.ChannelId.fromInt(index));
       channel.setPowered(true);
       channel.setEnabled(true);
-      channel.setPulseWidth(positionToPulseWidth(0.5));
       servos[index] = channel;
     }
   }
