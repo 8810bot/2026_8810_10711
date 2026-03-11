@@ -147,7 +147,7 @@ public class Intake extends SubsystemBase {
       case INITIALIZE -> {
         double baseUp = edu.wpi.first.math.util.Units.degreesToRotations(posUpDeg.get());
         deployPosRotSetpoint = baseUp;
-        rollerVoltsSetpoint = -IntakeConstants.ROLLER_INTAKE_VOLTS / 5; // 反转使得结构正确展开
+        rollerVoltsSetpoint = IntakeConstants.ROLLER_STOP_VOLTS; // 不动 roller
       }
       case DOWN_IDLE -> {
         deployPosRotSetpoint = edu.wpi.first.math.util.Units.degreesToRotations(posDownDeg.get());

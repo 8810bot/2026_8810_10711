@@ -16,10 +16,6 @@ package frc.robot;
 import com.pathplanner.lib.auto.AutoBuilder;
 import com.pathplanner.lib.commands.PathPlannerAuto;
 import com.revrobotics.servohub.ServoChannel;
-import com.revrobotics.servohub.ServoChannel.ChannelId;
-import com.revrobotics.servohub.ServoHub;
-import com.revrobotics.servohub.config.ServoChannelConfig;
-import com.revrobotics.servohub.config.ServoHubConfig;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.wpilibj.DriverStation;
@@ -84,8 +80,8 @@ public class RobotContainer {
   // Subsystems
   public final Drive drive;
   // Dashboard tuning
-  private LoggedTunableNumber hoodAngleDegTunable = new LoggedTunableNumber("Hood/AngleDeg", 0);
-  private LoggedTunableNumber shooterVelRpsTunable = new LoggedTunableNumber("Shooter/VelRps", 0);
+  private LoggedTunableNumber hoodAngleDegTunable = new LoggedTunableNumber("Hood/AngleDeg", 10);
+  private LoggedTunableNumber shooterVelRpsTunable = new LoggedTunableNumber("Shooter/VelRps", 22);
   private LoggedTunableNumber enableAutoAimTunable =
       new LoggedTunableNumber("Shooter/EnableAutoAim", 0);
 
@@ -172,6 +168,7 @@ public class RobotContainer {
         intake = new Intake(new IntakeIOTalonFX());
         hopper = new Hopper(new HopperIOReal());
         indexer = new Indexer(new IndexerIOTalonFX());
+        // 暂时禁用真实 CANdle 消除报错: led = new LED(new LEDIOCANdle());
         led = new LED(new LEDIO() {});
         break;
 
@@ -279,8 +276,7 @@ public class RobotContainer {
 
     // Debug: log nearest trench pre-align pose
     controller.rightStick().whileTrue(new SmashBumpCommand(this));
-    controller.leftStick().whileTrue(new SmashTrenchCommand(this)
-                          .alongWith(new InstantCommand(() -> hopper.setTargetState(Hopper.HopperTargetState.MID_INTAKE), hopper)));
+    controller.leftStick().whileTrue(new SmashTrenchCommand(this));
 
     // Manual tuning buttons
     // controller
@@ -291,15 +287,13 @@ public class RobotContainer {
     // Switch to X pattern when X button is pressed
     // controller.x().onTrue(Commands.runOnce(drive::stopWithX, drive));
 
-    // LB 键：按下开吸球，松开停吸球 (保持在下面) + Hopper 同步切换到中间位置 防止球飞出；松开时 Hopper 切回上面位置
+    // LB 键：按下开吸球，松开停吸球 (保持在下面)
     controller
         .leftBumper()
-        .onTrue(new InstantCommand(() -> intake.setWantedState(Intake.WantedState.DOWN_INTAKE))
-        .alongWith(new InstantCommand(() -> hopper.setTargetState(Hopper.HopperTargetState.MID_INTAKE), hopper)));
+        .onTrue(new InstantCommand(() -> intake.setWantedState(Intake.WantedState.DOWN_INTAKE)));
     controller
         .leftBumper()
-        .onFalse(new InstantCommand(() -> intake.setWantedState(Intake.WantedState.DOWN_IDLE))
-        .alongWith(new InstantCommand(() -> hopper.setTargetState(Hopper.HopperTargetState.UP_DEPLOY), hopper)));
+        .onFalse(new InstantCommand(() -> intake.setWantedState(Intake.WantedState.DOWN_IDLE)));
 
     // X 键：按住收回 Intake 到抬升位置
     controller
@@ -317,16 +311,17 @@ public class RobotContainer {
     //                   "Bump/AlignPose", FieldConstants.getNearestTrenchPrePose(drive.getPose()));
     //             }));
 
-    // 按下手柄的十字键“下”时，读取 NT4 的设定值并调整 Hood 角度
-    controller
-        .povDown()
-        .onTrue(
-            new InstantCommand(
-                () -> {
-                  double deg = hoodAngleDegTunable.get();
-                  hood.setAngle(deg);
-                },
-                hood));
+    // POV Down 已改用于控制 Hopper 伺服 (DOWN_STOW)
+    // 如需手动调 Hood 角度，请通过 NT4 仪表盘直接修改后重新部署，或使用其他按键
+    // controller
+    //     .povDown()
+    //     .onTrue(
+    //         new InstantCommand(
+    //             () -> {
+    //               double deg = hoodAngleDegTunable.get();
+    //               hood.setAngle(deg);
+    //             },
+    //             hood));
 
     // Reset gyro to 0° when B button is pressed
     controller
@@ -434,8 +429,18 @@ public class RobotContainer {
                     () -> hoodAngleDegTunable.get(),
                     () -> indexerUpVolts.get()),
                 () -> enableAutoAimTunable.get() > 0));
-    // controller.povUp().onTrue(hopper.runServoDeploySequence());
-    // controller.povDown().onTrue(hopper.runServoRestoreSequence());
+    // POV Up → 触发内部状态机序列: 切换到 UP_DEPLOY_STEP1 进行延时
+    controller
+        .povUp()
+        .onTrue(
+            new InstantCommand(
+                () -> hopper.setTargetState(Hopper.HopperTargetState.UP_DEPLOY_STEP1), hopper));
+    // POV Down → 触发内部状态机序列: 切换到 DOWN_STOW_STEP1 进行延时
+    controller
+        .povDown()
+        .onTrue(
+            new InstantCommand(
+                () -> hopper.setTargetState(Hopper.HopperTargetState.DOWN_STOW_STEP1), hopper));
   }
 
   /**
