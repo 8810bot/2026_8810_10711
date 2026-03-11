@@ -16,14 +16,18 @@ import org.littletonrobotics.junction.Logger;
 public class Hopper extends SubsystemBase {
   private final HopperIO io;
   private final HopperIOInputsAutoLogged inputs = new HopperIOInputsAutoLogged();
-  
+
   public enum HopperTargetState {
+    DOWN_STOW_STEP1,
     DOWN_STOW,
+    UP_DEPLOY_STEP1,
     UP_DEPLOY,
     MID_INTAKE
   }
-  
+
   private HopperTargetState TargetState = HopperTargetState.UP_DEPLOY;
+  private double stateStartTime = 0.0;
+  private static final double SEQUENCE_DELAY_SEC = 0.2;
 
   private final Debouncer fullDebouncer =
       new Debouncer(HopperConstants.FULL_DEBOUNCE_SEC, Debouncer.DebounceType.kBoth);
@@ -54,8 +58,9 @@ public class Hopper extends SubsystemBase {
   }
 
   public void setTargetState(HopperTargetState state) {
-    if(TargetState != state) {
+    if (TargetState != state) {
       TargetState = state;
+      stateStartTime = edu.wpi.first.wpilibj.Timer.getFPGATimestamp();
     }
   }
 
@@ -81,21 +86,52 @@ public class Hopper extends SubsystemBase {
 
   /** Apply the target state to the hopper servos. */
   private void applyTargetState() {
+    double timeInState = edu.wpi.first.wpilibj.Timer.getFPGATimestamp() - stateStartTime;
+
     switch (TargetState) {
+
+        // ================= POV DOWN (全变 0.5) =================
+      case DOWN_STOW_STEP1:
+        // POV DOWN 步骤一：相反顺序，先设置通道2(idx 1)和通道3(idx 2)为0.5
+        setServoPosition(0, 0.3);
+        // setServoPosition(1, 0.35);
+
+        // 延时条件满足，进入终态
+        if (timeInState >= SEQUENCE_DELAY_SEC) {
+          setTargetState(HopperTargetState.DOWN_STOW);
+        }
+        break;
+
       case DOWN_STOW:
-        setServoPosition(0, 0.0);
+        // POV DOWN 终态：所有通道均设为 0.5
+        setServoPosition(0, 0.3);
+        setServoPosition(1, 0.45);
+        setServoPosition(2, 0.35);
+        setServoPosition(3, 0.5);
+        setServoPosition(4, 0.5);
+        break;
+
+        // ================= POV UP (指定模式) =================
+      case UP_DEPLOY_STEP1:
+        // POV UP 步骤一：通道1(idx 0)和通道3(idx 2)设为0
+        setServoPosition(1, 0.0);
+        // setServoPosition(2, 0.0);
+
+        // 延时条件满足，进入终态
+        if (timeInState >= SEQUENCE_DELAY_SEC) {
+          setTargetState(HopperTargetState.UP_DEPLOY);
+        }
+        break;
+
+      case UP_DEPLOY:
+        // POV UP 终态：通道1和3保持0，通道2(idx 1)设为1/6
+        setServoPosition(0, 0.01);
         setServoPosition(1, 0.0);
         setServoPosition(2, 0.0);
-        setServoPosition(3, 0.0);
-        setServoPosition(4, 0.0);
+        setServoPosition(3, 0.0); // 未提，暂设为0
+        setServoPosition(4, 0.0); // 未提，暂设为0
         break;
-      case UP_DEPLOY:
-        setServoPosition(0, 1.0);
-        setServoPosition(1, 1.0);
-        setServoPosition(2, 1.0);
-        setServoPosition(3, 1.0);
-        setServoPosition(4, 1.0);
-        break;
+
       case MID_INTAKE:
         setServoPosition(0, 0.5);
         setServoPosition(1, 0.5);
@@ -106,6 +142,8 @@ public class Hopper extends SubsystemBase {
     }
     Logger.recordOutput("Hopper/TargetState", TargetState.name());
   }
+
+  // =========================================================================
 
   /** Command: move servos 1..4 to 0 and servo 5 to 0.5/3 in sequence. */
   public Command runServoDeploySequence() {
