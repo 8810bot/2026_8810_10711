@@ -112,7 +112,7 @@ public final class IntakeConstants {
   public static final double HOMING_VELOCITY_THRESHOLD = 0.02;
   /** 归零时重设的位置（机械止点角度，mechanism rotations）。 */
   public static final double HOMING_RESET_POS_ROT =
-      edu.wpi.first.math.util.Units.degreesToRotations(-70);
+      edu.wpi.first.math.util.Units.degreesToRotations(-5);
 
   private IntakeConstants() {}
 }
