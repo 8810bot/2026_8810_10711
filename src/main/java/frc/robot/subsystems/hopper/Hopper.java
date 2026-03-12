@@ -99,11 +99,10 @@ public class Hopper extends SubsystemBase {
     double timeInState = edu.wpi.first.wpilibj.Timer.getFPGATimestamp() - stateStartTime;
 
     switch (TargetState) {
-
         // ================= POV DOWN (全变 0.5) =================
       case DOWN_STOW_STEP1:
         // POV DOWN 步骤一：相反顺序，先设置通道3(idx 2)为0.35
-        setServoPosition(2, 0.4);
+        setServoPosition(1, 0.4);
         setServoPosition(0, 0.45);
 
         // 延时条件满足，进入步骤二
@@ -115,15 +114,15 @@ public class Hopper extends SubsystemBase {
       case DOWN_STOW:
         // POV DOWN 终态：通道1(idx 0)设为0.3
         setServoPosition(0, 0.3);
-        setServoPosition(1, 0.45);
-        setServoPosition(2, 0.4);
+        setServoPosition(2, 0.45);
+        setServoPosition(1, 0.4);
         setServoPosition(5, 0.45);
         break;
 
         // ================= POV UP (指定模式) =================
       case UP_DEPLOY_STEP1:
         // POV UP 步骤一：通道1(idx 0)设为0
-        setServoPosition(1, 0.0);
+        setServoPosition(2, 0.0);
         setServoPosition(5, 0.00);
 
         // 延时条件满足，进入步骤二
@@ -134,15 +133,15 @@ public class Hopper extends SubsystemBase {
       case UP_DEPLOY:
         // POV UP 终态：通道3(idx 2)设为0.01
         setServoPosition(0, 0.0);
-        setServoPosition(1, 0.0);
-        setServoPosition(2, 0.01);
+        setServoPosition(2, 0.0);
+        setServoPosition(1, 0.01);
         setServoPosition(5, 0.00);
         break;
 
       case MID_INTAKE:
         setServoPosition(0, 0.5);
-        setServoPosition(1, 0.5);
         setServoPosition(2, 0.5);
+        setServoPosition(1, 0.5);
         break;
     }
     Logger.recordOutput("Hopper/TargetState", TargetState.name());

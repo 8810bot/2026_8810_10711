@@ -157,7 +157,7 @@ public final class Constants {
     public static final double ENTER_HEADING_TOL_RAD = Math.toRadians(2.0);
     public static final double EXIT_HEADING_TOL_RAD = Math.toRadians(4.0);
     public static final double MAX_OMEGA = Math.PI;
-    public static final double ENTER_FLYWHEEL_RPS_TOL = 1;
+    public static final double ENTER_FLYWHEEL_RPS_TOL = 1.5;
     public static final double EXIT_FLYWHEEL_RPS_TOL = 12;
     public static final double ENTER_HOOD_DEG_TOL = 0.5;
     public static final double EXIT_HOOD_DEG_TOL = 2.0;

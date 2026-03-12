@@ -25,6 +25,10 @@ public class Down extends SequentialCommandGroup {
     try {
       Down1 = PathPlannerPath.fromChoreoTrajectory("Down1");
       Down2 = PathPlannerPath.fromChoreoTrajectory("Down2");
+
+      addCommands(
+          new InstantCommand(() -> robotContainer.intake.setWantedState(Intake.WantedState.INIT)));
+      addCommands(new WaitCommand(0.5));
       addCommands(
           new InstantCommand(
               () -> robotContainer.intake.setWantedState(Intake.WantedState.DOWN_INTAKE)));

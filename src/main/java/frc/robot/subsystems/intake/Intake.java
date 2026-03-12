@@ -23,11 +23,10 @@ public class Intake extends SubsystemBase {
     UP_DEBUG,
     /** 间歇性收放，用来把球往后拨 */
     FLICK_BACK,
-    /** 初始化状态 */
-    INITIALIZE,
+    INIT
   }
 
-  private WantedState wantedState = WantedState.INITIALIZE;
+  private WantedState wantedState = WantedState.INIT;
 
   private double rollerVoltsSetpoint = 0.0;
   private double deployPosRotSetpoint = 0.0;
@@ -144,10 +143,12 @@ public class Intake extends SubsystemBase {
 
   private void applyWantedState() {
     switch (wantedState) {
-      case INITIALIZE -> {
-        double baseUp = edu.wpi.first.math.util.Units.degreesToRotations(posUpDeg.get());
-        deployPosRotSetpoint = baseUp;
-        rollerVoltsSetpoint = IntakeConstants.ROLLER_STOP_VOLTS; // 不动 roller
+      case INIT -> {
+        deployPosRotSetpoint = edu.wpi.first.math.util.Units.degreesToRotations(posDownDeg.get());
+        rollerVoltsSetpoint = -2.0; // 轻微反转 确保正确展开
+        if (isDeployAtTarget(deployPosRotSetpoint)) {
+          setWantedState(WantedState.DOWN_IDLE);
+        }
       }
       case DOWN_IDLE -> {
         deployPosRotSetpoint = edu.wpi.first.math.util.Units.degreesToRotations(posDownDeg.get());
