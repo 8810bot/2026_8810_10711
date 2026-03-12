@@ -51,7 +51,7 @@ public final class IntakeConstants {
       edu.wpi.first.math.util.Units.degreesToRotations(40);
   /** Deploy position when deployed down for intaking (mechanism rotations). */
   public static final double DEPLOY_POS_DOWN_ROT =
-      edu.wpi.first.math.util.Units.degreesToRotations(0);
+      edu.wpi.first.math.util.Units.degreesToRotations(10);
 
   public static final double FLIP_POS_UP = edu.wpi.first.math.util.Units.degreesToRotations(0);
 

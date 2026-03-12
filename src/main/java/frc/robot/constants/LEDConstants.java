@@ -18,10 +18,11 @@ public final class LEDConstants {
   /** TODO: set to your CANdle CAN ID. */
   public static final int CANDLE_ID = 60;
 
-  /** Indices 0-7 onboard, 8-399 strip. Tune to your wiring. */
-  public static final int LED_START_INDEX = 8;
+  /** First LED index to control. */
+  public static final int LED_START_INDEX = 0;
 
-  public static final int LED_END_INDEX = 399;
+  /** Number of LEDs to control starting from {@link #LED_START_INDEX}. */
+  public static final int LED_COUNT = 8;
 
   private LEDConstants() {}
 }

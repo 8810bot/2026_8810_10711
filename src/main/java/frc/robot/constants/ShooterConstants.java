@@ -35,24 +35,17 @@ public final class ShooterConstants {
   public static final double FLYWHEEL_SENSOR_TO_MECH_RATIO = 30. / 24.;
 
   /** Flywheel/exit location relative to robot center (meters). +X forward, +Y left. */
-  public static final double FLYWHEEL_OFFSET_X_METERS = -0.15;
+  public static final double FLYWHEEL_OFFSET_X_METERS = 0.0;
 
   public static final double FLYWHEEL_OFFSET_Y_METERS = 0.0;
 
   // Flywheel closed-loop gains (Phoenix Slot0)
   // Shooter 1
-  public static final double FLYWHEEL_1_KP = 15;
-  public static final double FLYWHEEL_1_KI = 0.0;
-  public static final double FLYWHEEL_1_KD = 0.0;
-  public static final double FLYWHEEL_1_KV = 0.34;
-  public static final double FLYWHEEL_1_KS = 12;
-
-  // Shooter 2 (default same as shooter 1; tune independently)
-  public static final double FLYWHEEL_2_KP = 15;
-  public static final double FLYWHEEL_2_KI = 0.0;
-  public static final double FLYWHEEL_2_KD = 0.0;
-  public static final double FLYWHEEL_2_KV = 0.34;
-  public static final double FLYWHEEL_2_KS = 12;
+  public static final double FLYWHEEL_1_KP = 8;
+  public static final double FLYWHEEL_1_KI = 0.7;
+  public static final double FLYWHEEL_1_KD = 0.15;
+  public static final double FLYWHEEL_1_KV = 0.0;
+  public static final double FLYWHEEL_1_KS = 10;
 
   // Current limits (amps). Tune to protect wiring/breakers.
   public static final boolean ENABLE_SUPPLY_CURRENT_LIMIT = true;

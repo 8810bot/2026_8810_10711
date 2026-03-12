@@ -32,9 +32,10 @@ import frc.robot.commands.Auto.Down;
 import frc.robot.commands.Auto.DownMagic;
 import frc.robot.commands.Auto.UpOut;
 import frc.robot.commands.DefaultFeederCommand;
-import frc.robot.commands.DefaultIndexerCommand;
 import frc.robot.commands.DriveCommands;
 import frc.robot.commands.LEDDefaultCommand;
+import frc.robot.commands.ManualFixedShootCommand;
+import frc.robot.commands.ManualFixedShootCommand.ShotState;
 import frc.robot.commands.ManualShootCommand;
 import frc.robot.commands.MegaTrackIterativeCommand;
 import frc.robot.commands.SmashBumpCommand;
@@ -53,6 +54,7 @@ import frc.robot.subsystems.hood.Hood;
 import frc.robot.subsystems.hood.HoodIO;
 import frc.robot.subsystems.hood.HoodIOTalonFX;
 import frc.robot.subsystems.hopper.Hopper;
+import frc.robot.subsystems.hopper.Hopper.HopperTargetState;
 import frc.robot.subsystems.hopper.HopperIO;
 import frc.robot.subsystems.hopper.HopperIOReal;
 import frc.robot.subsystems.indexer.Indexer;
@@ -63,6 +65,7 @@ import frc.robot.subsystems.intake.IntakeIO;
 import frc.robot.subsystems.intake.IntakeIOTalonFX;
 import frc.robot.subsystems.led.LED;
 import frc.robot.subsystems.led.LEDIO;
+import frc.robot.subsystems.led.LEDIOCANdle;
 import frc.robot.subsystems.shooter.Shooter;
 import frc.robot.subsystems.shooter.ShooterIO;
 import frc.robot.subsystems.shooter.ShooterIOTalonFX;
@@ -169,7 +172,7 @@ public class RobotContainer {
         hopper = new Hopper(new HopperIOReal());
         indexer = new Indexer(new IndexerIOTalonFX());
         // 暂时禁用真实 CANdle 消除报错: led = new LED(new LEDIOCANdle());
-        led = new LED(new LEDIO() {});
+        led = new LED(new LEDIOCANdle());
         break;
 
       case SIM:
@@ -239,7 +242,7 @@ public class RobotContainer {
     // Default commands
     led.setDefaultCommand(new LEDDefaultCommand(this));
     feeder.setDefaultCommand(new DefaultFeederCommand(feeder));
-    indexer.setDefaultCommand(new DefaultIndexerCommand(indexer));
+    // indexer.setDefaultCommand(new DefaultIndexerCommand(indexer));
   }
 
   // IndexerUp：仪表盘实时调节电压
@@ -290,10 +293,16 @@ public class RobotContainer {
     // LB 键：按下开吸球，松开停吸球 (保持在下面)
     controller
         .leftBumper()
-        .onTrue(new InstantCommand(() -> intake.setWantedState(Intake.WantedState.DOWN_INTAKE)));
+        .onTrue(
+            new InstantCommand(
+                () -> intake.setWantedState(Intake.WantedState.DOWN_INTAKE), intake));
+    controller.leftBumper().whileTrue(new InstantCommand(() -> indexer.setUpVoltage(-2), indexer));
+
     controller
         .leftBumper()
-        .onFalse(new InstantCommand(() -> intake.setWantedState(Intake.WantedState.DOWN_IDLE)));
+        .onFalse(
+            new InstantCommand(() -> intake.setWantedState(Intake.WantedState.DOWN_IDLE))
+                .alongWith(new InstantCommand(() -> indexer.setUpVoltage(0), indexer)));
 
     // X 键：按住收回 Intake 到抬升位置
     controller
@@ -367,9 +376,7 @@ public class RobotContainer {
     //               .alongWith(new InstantCommand(() -> this.m_channel5.setPowered(true)))
     //               .alongWith(new InstantCommand(() -> this.m_channel5.setEnabled(true))));
     // }
-    controller
-        .a()
-        .onTrue(new InstantCommand(() -> intake.setWantedState(Intake.WantedState.UP_DEBUG)));
+    controller.a().whileTrue(Commands.startEnd(() -> led.setSolid(0, 0, 200), led::off, led));
 
     // controller
     //     .leftBumper()
@@ -398,13 +405,13 @@ public class RobotContainer {
         .whileTrue(
             Commands.run(
                 () -> {
-                  intake.setWantedState(Intake.WantedState.FLICK_BACK);
+                  intake.setWantedState(Intake.WantedState.UP_STOW_STOP);
                 },
                 intake))
         .onFalse(
             Commands.runOnce(
                 () -> {
-                  intake.setWantedState(Intake.WantedState.UP_STOW_STOP);
+                  intake.setWantedState(Intake.WantedState.DOWN_IDLE);
                 },
                 intake));
     // 手动发射 (无自瞄，NT4 可调参数: Shooter/VelRps, Hood/AngleDeg)
@@ -429,18 +436,21 @@ public class RobotContainer {
                     () -> hoodAngleDegTunable.get(),
                     () -> indexerUpVolts.get()),
                 () -> enableAutoAimTunable.get() > 0));
+    controller.y().whileTrue(new MegaTrackIterativeCommand(this, false));
+    controller.b().whileTrue(new ManualFixedShootCommand(this, ShotState.CLOSE));
+
     // POV Up → 触发内部状态机序列: 切换到 UP_DEPLOY_STEP1 进行延时
     controller
         .povUp()
         .onTrue(
             new InstantCommand(
-                () -> hopper.setTargetState(Hopper.HopperTargetState.UP_DEPLOY_STEP1), hopper));
+                () -> hopper.setTargetState(HopperTargetState.DOWN_STOW_STEP1), hopper));
     // POV Down → 触发内部状态机序列: 切换到 DOWN_STOW_STEP1 进行延时
     controller
         .povDown()
         .onTrue(
             new InstantCommand(
-                () -> hopper.setTargetState(Hopper.HopperTargetState.DOWN_STOW_STEP1), hopper));
+                () -> hopper.setTargetState(HopperTargetState.UP_DEPLOY_STEP1), hopper));
   }
 
   /**

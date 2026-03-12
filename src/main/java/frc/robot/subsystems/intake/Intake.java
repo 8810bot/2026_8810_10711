@@ -24,7 +24,7 @@ public class Intake extends SubsystemBase {
     /** 间歇性收放，用来把球往后拨 */
     FLICK_BACK,
     /** 初始化状态 */
-    INITIALIZE
+    INITIALIZE,
   }
 
   private WantedState wantedState = WantedState.INITIALIZE;
@@ -39,7 +39,7 @@ public class Intake extends SubsystemBase {
     MOVING_UP,
     HOLDING_UP,
     MOVING_DOWN,
-    HOLDING_DOWN
+    HOLDING_DOWN,
   }
 
   private FlickPhase flickPhase = FlickPhase.MOVING_UP;

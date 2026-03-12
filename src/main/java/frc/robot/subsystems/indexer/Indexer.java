@@ -29,13 +29,10 @@ public class Indexer extends SubsystemBase {
 
   /** 独立设置 IndexerUp 电压 (volts)。 */
   public void setUpVoltage(double volts) {
-    upVoltsSetpoint = volts;
     io.setUpVoltage(volts);
   }
 
   public void stop() {
-    voltsSetpoint = 0.0;
-    upVoltsSetpoint = 0.0;
     io.stop();
   }
 }

@@ -10,7 +10,7 @@ import frc.robot.constants.HopperConstants;
 
 /** Hopper IO that combines CANrange sensing with REV Servo Hub CAN servo control. */
 public class HopperIOServo extends HopperIOCANrange {
-  private static final int SERVO_COUNT = 5;
+  private static final int SERVO_COUNT = 6;
   private static final int SERVO_MIN_PULSE_WIDTH_US = 500;
   private static final int SERVO_CENTER_PULSE_WIDTH_US = 1500;
   private static final int SERVO_MAX_PULSE_WIDTH_US = 2500;

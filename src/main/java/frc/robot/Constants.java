@@ -119,7 +119,7 @@ public final class Constants {
     public static final double HEADING_HOLD_MAX_DIST_METERS = 5.6;
 
     // Shoot gating thresholds (hysteresis): enter tight, stay loose
-    public static final double ENTER_FLYWHEEL_RPS_TOL = 1.0;
+    public static final double ENTER_FLYWHEEL_RPS_TOL = 2.0;
     public static final double EXIT_FLYWHEEL_RPS_TOL = 2.0;
     public static final double ENTER_HOOD_DEG_TOL = 1.0;
     public static final double EXIT_HOOD_DEG_TOL = 2.0;
@@ -157,9 +157,9 @@ public final class Constants {
     public static final double ENTER_HEADING_TOL_RAD = Math.toRadians(2.0);
     public static final double EXIT_HEADING_TOL_RAD = Math.toRadians(4.0);
     public static final double MAX_OMEGA = Math.PI;
-    public static final double ENTER_FLYWHEEL_RPS_TOL = 1.5;
+    public static final double ENTER_FLYWHEEL_RPS_TOL = 1;
     public static final double EXIT_FLYWHEEL_RPS_TOL = 12;
-    public static final double ENTER_HOOD_DEG_TOL = 1.0;
+    public static final double ENTER_HOOD_DEG_TOL = 0.5;
     public static final double EXIT_HOOD_DEG_TOL = 2.0;
 
     public static final double TRIGGER_AXIS_THRESHOLD = 0.25;
@@ -207,6 +207,19 @@ public final class Constants {
     public static final double INDEXER_VOLTS = 6.0;
 
     private MegaTrackVelocityProfileCommandConstants() {}
+  }
+
+  /** Fixed setpoints for manual close/far shooting command. */
+  public static final class ManualFixedShootCommandConstants {
+    public static final double CLOSE_HOOD_DEG = 0.0;
+    public static final double CLOSE_SHOOTER_RPS = 47;
+
+    public static final double FAR_HOOD_DEG = 17.7;
+    public static final double FAR_SHOOTER_RPS = 30.3;
+
+    public static final double INDEXER_UP_VOLTS = 8.0;
+
+    private ManualFixedShootCommandConstants() {}
   }
 
   public static enum Mode {
@@ -674,21 +687,27 @@ public final class Constants {
 
     static {
       // Updated from shootmap.md (鐠烘繄顬? 鐏忓嫭澧滈柅鐔峰, hood鐟欐帒瀹? 妞嬬偠顢戦弮鍫曟？)
-      hoodAngleMap.put(1.405, 0.9);
-      hoodAngleMap.put(2.031, 2.1);
-      hoodAngleMap.put(2.725, 4.7);
-      hoodAngleMap.put(3.271, 7.5);
-      hoodAngleMap.put(3.705, 11.5);
-      hoodAngleMap.put(4.279, 13.);
-      hoodAngleMap.put(4.776, 17.7);
+      hoodAngleMap.put(1.188, 0.0);
+      hoodAngleMap.put(1.508, 0.0);
+      hoodAngleMap.put(1.800, 5.0);
+      hoodAngleMap.put(2.138, 6.00);
+      hoodAngleMap.put(2.419, 7.5);
+      hoodAngleMap.put(2.717, 8.00);
+      hoodAngleMap.put(3.011, 8.60);
+      hoodAngleMap.put(3.415, 9.50);
+      hoodAngleMap.put(3.853, 11.0);
+      hoodAngleMap.put(4.375, 15.0);
 
-      shooterSpeedMap.put(1.405, 22.3);
-      shooterSpeedMap.put(2.031, 23.1);
-      shooterSpeedMap.put(2.725, 25.);
-      shooterSpeedMap.put(3.271, 27.2);
-      shooterSpeedMap.put(3.705, 28.);
-      shooterSpeedMap.put(4.279, 29.1);
-      shooterSpeedMap.put(4.776, 30.3);
+      shooterSpeedMap.put(1.188, 22.0);
+      shooterSpeedMap.put(1.508, 24.0);
+      shooterSpeedMap.put(1.800, 23.0);
+      shooterSpeedMap.put(2.138, 23.5);
+      shooterSpeedMap.put(2.419, 24.5);
+      shooterSpeedMap.put(2.717, 24.5);
+      shooterSpeedMap.put(3.011, 25.3);
+      shooterSpeedMap.put(3.415, 26.5);
+      shooterSpeedMap.put(3.853, 28.0);
+      shooterSpeedMap.put(4.375, 29.5);
 
       flightTimeMap.put(1.405, 0.9);
       flightTimeMap.put(2.031, 0.95);

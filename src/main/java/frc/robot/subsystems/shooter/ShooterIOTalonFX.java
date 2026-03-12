@@ -61,7 +61,7 @@ public class ShooterIOTalonFX implements ShooterIO {
         ShooterConstants.FLYWHEEL_LEADER_INVERTED
             ? InvertedValue.Clockwise_Positive
             : InvertedValue.CounterClockwise_Positive;
-    flywheelCfg.TorqueCurrent.PeakReverseTorqueCurrent = 0;
+    flywheelCfg.TorqueCurrent.PeakReverseTorqueCurrent = -100;
     flywheelCfg.Feedback.SensorToMechanismRatio = ShooterConstants.FLYWHEEL_SENSOR_TO_MECH_RATIO;
     flywheelCfg.CurrentLimits.SupplyCurrentLimitEnable =
         ShooterConstants.ENABLE_SUPPLY_CURRENT_LIMIT;

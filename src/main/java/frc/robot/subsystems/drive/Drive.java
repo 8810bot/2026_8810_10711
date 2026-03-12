@@ -350,9 +350,28 @@ public class Drive extends SubsystemBase {
     // Update gyro alert
     gyroDisconnectedAlert.set(!gyroInputs.connected && Constants.currentMode != Mode.SIM);
 
+    disttogoal();
+
     // Tilt detection (uses pitch/roll)
     updateTiltDetection();
   }
+
+  private void disttogoal() {
+    Alliance alliance = DriverStation.getAlliance().orElse(Alliance.Blue);
+    Translation2d goalLocation = Constants.FieldConstants.getHubLocation(alliance);
+    Pose2d robotpose = this.getPose();
+    double dx = goalLocation.getX() - robotpose.getX();
+    double dy = goalLocation.getY() - robotpose.getY();
+    Logger.recordOutput("Drive/toHubDist", Math.hypot(dx, dy));
+  }
+
+  // private void updateHubDistanceLogging() {
+  //   Alliance alliance = DriverStation.getAlliance().orElse(Alliance.Blue);
+  //   double hubDistanceMeters = disttogoal();
+
+  //   Logger.recordOutput("Drive/HubDistanceMeters", hubDistanceMeters);
+  //   Logger.recordOutput("Drive/HubDistanceAllianceIsRed", alliance == Alliance.Red);
+  // }
 
   private void updateTiltDetection() {
     double pitchRad = gyroInputs.pitchPosition.getRadians();

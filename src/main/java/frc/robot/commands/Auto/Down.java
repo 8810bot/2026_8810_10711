@@ -10,11 +10,12 @@ import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.DriverStation.Alliance;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.SequentialCommandGroup;
+import edu.wpi.first.wpilibj2.command.WaitCommand;
 import frc.robot.Constants.FieldConstants;
 import frc.robot.RobotContainer;
 import frc.robot.commands.MegaTrackIterativeCommand;
-import frc.robot.commands.SmashBumpCommand;
 import frc.robot.commands.SmashTrenchCommand;
+import frc.robot.subsystems.hopper.Hopper.HopperTargetState;
 import frc.robot.subsystems.intake.Intake;
 
 public class Down extends SequentialCommandGroup {
@@ -27,16 +28,23 @@ public class Down extends SequentialCommandGroup {
       addCommands(
           new InstantCommand(
               () -> robotContainer.intake.setWantedState(Intake.WantedState.DOWN_INTAKE)));
-      addCommands(AutoBuilder.followPath(Down1));
-      addCommands(new SmashBumpCommand(robotContainer).withTimeout(3.2));
-      addCommands(new MegaTrackIterativeCommand(robotContainer, false).withTimeout(4));
+      addCommands(
+          new InstantCommand(
+              () -> robotContainer.hopper.setTargetState(HopperTargetState.DOWN_STOW_STEP1)));
+      addCommands(new WaitCommand(1));
       addCommands(new SmashTrenchCommand(robotContainer).withTimeout(3.2));
       addCommands(
           new InstantCommand(
-              () -> robotContainer.intake.setWantedState(Intake.WantedState.DOWN_INTAKE)));
-      addCommands(AutoBuilder.followPath(Down2));
-      addCommands(new SmashBumpCommand(robotContainer).withTimeout(3.2));
-      addCommands(new MegaTrackIterativeCommand(robotContainer, false));
+              () -> robotContainer.hopper.setTargetState(HopperTargetState.UP_DEPLOY_STEP1)));
+      addCommands(AutoBuilder.followPath(Down1));
+      addCommands(new MegaTrackIterativeCommand(robotContainer, false).withTimeout(10));
+      // addCommands(new SmashTrenchCommand(robotContainer).withTimeout(3.2));
+      // addCommands(
+      //     new InstantCommand(
+      //         () -> robotContainer.intake.setWantedState(Intake.WantedState.DOWN_INTAKE)));
+      // addCommands(AutoBuilder.followPath(Down2));
+      // addCommands(new SmashBumpCommand(robotContainer).withTimeout(3.2));
+      // addCommands(new MegaTrackIterativeCommand(robotContainer, false));
     } catch (Exception e) {
       DriverStation.reportError("Big oops: " + e.getMessage(), e.getStackTrace());
     }

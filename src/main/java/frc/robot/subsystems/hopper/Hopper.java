@@ -38,6 +38,7 @@ public class Hopper extends SubsystemBase {
 
   public Hopper(HopperIO io) {
     this.io = io;
+    init();
   }
 
   @Override
@@ -83,9 +84,16 @@ public class Hopper extends SubsystemBase {
   /** Set one servo position by index [0..4]. */
   public void setServoPosition(int index, double position) {
     io.setServoPosition(index, position);
-    Logger.recordOutput("Hopper/Servo" + (index + 1) + "Setpoint", position);
+    Logger.recordOutput("Hopper/Servo" + (index) + "Setpoint", position);
   }
 
+  private void init() {
+    setServoPosition(0, 0.0);
+    setServoPosition(1, 0.0);
+    setServoPosition(2, 0.0);
+    setServoPosition(5, 0.0);
+    ;
+  }
   /** Apply the target state to the hopper servos. */
   private void applyTargetState() {
     double timeInState = edu.wpi.first.wpilibj.Timer.getFPGATimestamp() - stateStartTime;
@@ -95,19 +103,10 @@ public class Hopper extends SubsystemBase {
         // ================= POV DOWN (全变 0.5) =================
       case DOWN_STOW_STEP1:
         // POV DOWN 步骤一：相反顺序，先设置通道3(idx 2)为0.35
-        setServoPosition(2, 0.35);
+        setServoPosition(2, 0.4);
+        setServoPosition(0, 0.45);
 
         // 延时条件满足，进入步骤二
-        if (timeInState >= SEQUENCE_DELAY_SEC) {
-          setTargetState(HopperTargetState.DOWN_STOW_STEP2);
-        }
-        break;
-
-      case DOWN_STOW_STEP2:
-        // POV DOWN 步骤二：设置通道2(idx 1)为0.45
-        setServoPosition(1, 0.45);
-
-        // 延时条件满足，进入终态
         if (timeInState >= SEQUENCE_DELAY_SEC) {
           setTargetState(HopperTargetState.DOWN_STOW);
         }
@@ -117,47 +116,33 @@ public class Hopper extends SubsystemBase {
         // POV DOWN 终态：通道1(idx 0)设为0.3
         setServoPosition(0, 0.3);
         setServoPosition(1, 0.45);
-        setServoPosition(2, 0.45);
-        setServoPosition(3, 0.5);
-        setServoPosition(4, 0.5);
+        setServoPosition(2, 0.4);
+        setServoPosition(5, 0.45);
         break;
 
         // ================= POV UP (指定模式) =================
       case UP_DEPLOY_STEP1:
         // POV UP 步骤一：通道1(idx 0)设为0
-        setServoPosition(0, 0.0);
+        setServoPosition(1, 0.0);
+        setServoPosition(5, 0.00);
 
         // 延时条件满足，进入步骤二
-        if (timeInState >= SEQUENCE_DELAY_SEC) {
-          setTargetState(HopperTargetState.UP_DEPLOY_STEP2);
-        }
-        break;
-
-      case UP_DEPLOY_STEP2:
-        // POV UP 步骤二：通道2(idx 1)设为0
-        setServoPosition(1, 0.0);
-
-        // 延时条件满足，进入终态
         if (timeInState >= SEQUENCE_DELAY_SEC) {
           setTargetState(HopperTargetState.UP_DEPLOY);
         }
         break;
-
       case UP_DEPLOY:
         // POV UP 终态：通道3(idx 2)设为0.01
         setServoPosition(0, 0.0);
         setServoPosition(1, 0.0);
         setServoPosition(2, 0.01);
-        setServoPosition(3, 0.0); // 未提，暂设为0
-        setServoPosition(4, 0.0); // 未提，暂设为0
+        setServoPosition(5, 0.00);
         break;
 
       case MID_INTAKE:
         setServoPosition(0, 0.5);
         setServoPosition(1, 0.5);
         setServoPosition(2, 0.5);
-        setServoPosition(3, 0.5);
-        setServoPosition(4, 0.5);
         break;
     }
     Logger.recordOutput("Hopper/TargetState", TargetState.name());

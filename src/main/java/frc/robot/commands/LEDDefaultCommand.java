@@ -1,7 +1,6 @@
 // Copyright 2026
 package frc.robot.commands;
 
-import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj2.command.Command;
 import frc.robot.RobotContainer;
 
@@ -21,17 +20,7 @@ public class LEDDefaultCommand extends Command {
 
   @Override
   public void execute() {
-    // TODO: replace with full machine-state logic (enabled/disabled, errors, shooting ready, etc.)
-    if (DriverStation.isDisabled()) {
-      robot.led.off();
-      return;
-    }
-
-    // if (robot.hopper.isFull()) {
-    //   robot.led.setSolid(0, 255, 0); // green
-    // } else {
-    robot.led.setBlink(255, 80, 0, 0.15, 0.15); // orange blink
-    // }
+    robot.led.off();
   }
 
   @Override
