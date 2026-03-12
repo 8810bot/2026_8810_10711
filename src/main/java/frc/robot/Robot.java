@@ -16,6 +16,7 @@ package frc.robot;
 import com.ctre.phoenix6.swerve.SwerveModuleConstants;
 import com.ctre.phoenix6.swerve.SwerveModuleConstants.DriveMotorArrangement;
 import com.ctre.phoenix6.swerve.SwerveModuleConstants.SteerMotorArrangement;
+import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
 import frc.robot.generated.TunerConstants;
@@ -108,6 +109,20 @@ public class Robot extends LoggedRobot {
     // Optionally switch the thread to high priority to improve loop
     // timing (see the template project documentation for details)
     // Threads.setCurrentThreadPriority(true, 99);
+
+    
+    double Gametime = DriverStation.getMatchTime();
+    double shift_time = -1; // Initialize shift_time
+    if( isTeleop() ){
+      if (Gametime >= 130) shift_time = Gametime - 130.0;
+      else if (130 > Gametime && Gametime >= 105) shift_time = Gametime - 105.0;
+      else if (105 > Gametime && Gametime >= 80) shift_time = Gametime - 80.0;
+      else if (80 > Gametime && Gametime >= 55) shift_time = Gametime - 55.0;
+      else if (55 > Gametime && Gametime >= 30) shift_time = Gametime - 30.0;
+      else if (30 > Gametime && Gametime > 0) shift_time = Gametime;
+    }
+    
+    Logger.recordOutput("CustomOutput/ShiftTime", shift_time);
 
     // Runs the Scheduler. This is responsible for polling buttons, adding
     // newly-scheduled commands, running already-scheduled commands, removing
