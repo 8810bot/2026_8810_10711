@@ -28,6 +28,9 @@ public class Feeder extends SubsystemBase {
     io.setVelocity(rps);
   }
 
+  public void setVoltage(double Voltage) {
+    io.setVoltage(Voltage);
+  }
   /** Returns the primary feeder motor current (amps). */
   public double getCurrentAmps() {
     return inputs.current1Amps;

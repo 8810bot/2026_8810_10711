@@ -69,7 +69,7 @@ public class FeederUnjamCommand extends Command {
   }
 
   private void runUnjam() {
-    feeder.setVelocity(UnjamConstants.UNJAM_FEEDER_RPS);
+    feeder.setVelocity(UnjamConstants.UNJAM_FEEDER_VOLTS);
     indexer.setVoltage(UnjamConstants.UNJAM_INDEXER_VOLTS);
 
     double elapsed = Timer.getFPGATimestamp() - unjamStartSec;

@@ -110,10 +110,9 @@ public class Robot extends LoggedRobot {
     // timing (see the template project documentation for details)
     // Threads.setCurrentThreadPriority(true, 99);
 
-    
     double Gametime = DriverStation.getMatchTime();
     double shift_time = -1; // Initialize shift_time
-    if( isTeleop() ){
+    if (isTeleop()) {
       if (Gametime >= 130) shift_time = Gametime - 130.0;
       else if (130 > Gametime && Gametime >= 105) shift_time = Gametime - 105.0;
       else if (105 > Gametime && Gametime >= 80) shift_time = Gametime - 80.0;
@@ -121,7 +120,7 @@ public class Robot extends LoggedRobot {
       else if (55 > Gametime && Gametime >= 30) shift_time = Gametime - 30.0;
       else if (30 > Gametime && Gametime > 0) shift_time = Gametime;
     }
-    
+
     Logger.recordOutput("CustomOutput/ShiftTime", shift_time);
 
     // Runs the Scheduler. This is responsible for polling buttons, adding

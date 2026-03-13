@@ -14,6 +14,7 @@ import edu.wpi.first.wpilibj2.command.WaitCommand;
 import frc.robot.Constants.FieldConstants;
 import frc.robot.RobotContainer;
 import frc.robot.commands.MegaTrackIterativeCommand;
+import frc.robot.commands.ReverseFeeder;
 import frc.robot.commands.SmashTrenchCommand;
 import frc.robot.subsystems.hopper.Hopper.HopperTargetState;
 import frc.robot.subsystems.intake.Intake;
@@ -28,7 +29,10 @@ public class Down extends SequentialCommandGroup {
 
       addCommands(
           new InstantCommand(() -> robotContainer.intake.setWantedState(Intake.WantedState.INIT)));
-      addCommands(new WaitCommand(0.5));
+
+      addCommands(
+          new ReverseFeeder(robotContainer.feeder, robotContainer.indexer)
+              .raceWith(new WaitCommand(0.5)));
       addCommands(
           new InstantCommand(
               () -> robotContainer.intake.setWantedState(Intake.WantedState.DOWN_INTAKE)));

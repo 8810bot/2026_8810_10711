@@ -61,7 +61,7 @@ public final class FeederConstants {
     public static final double NORMAL_INDEXER_VOLTS = 8.0;
 
     /** Reverse speeds for unjamming (lower power). */
-    public static final double UNJAM_FEEDER_RPS = -6.0;
+    public static final double UNJAM_FEEDER_VOLTS = -3.0;
 
     public static final double UNJAM_INDEXER_VOLTS = -3.0;
 

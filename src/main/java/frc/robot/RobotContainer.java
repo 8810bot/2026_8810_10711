@@ -38,6 +38,7 @@ import frc.robot.commands.DriveCommands;
 import frc.robot.commands.LEDDefaultCommand;
 import frc.robot.commands.ManualShootCommand;
 import frc.robot.commands.MegaTrackIterativeCommand;
+import frc.robot.commands.ReverseFeeder;
 import frc.robot.commands.SmashBumpCommand;
 import frc.robot.generated.TunerConstants;
 import frc.robot.subsystems.drive.Drive;
@@ -83,7 +84,7 @@ public class RobotContainer {
   private LoggedTunableNumber hoodAngleDegTunable = new LoggedTunableNumber("Hood/AngleDeg", 10);
   private LoggedTunableNumber shooterVelRpsTunable = new LoggedTunableNumber("Shooter/VelRps", 22);
   private LoggedTunableNumber enableAutoAimTunable =
-      new LoggedTunableNumber("Shooter/EnableAutoAim", 0);
+      new LoggedTunableNumber("Shooter/EnableAutoAim", 1);
 
   // ---- IndexerUp 独立电压控制 ----
   /** 仪表盘实时调节 IndexerUp 电压 (volts) */
@@ -314,6 +315,8 @@ public class RobotContainer {
     controller
         .x()
         .onFalse(new InstantCommand(() -> intake.setWantedState(Intake.WantedState.DOWN_IDLE)));
+
+    controller.a().whileTrue(new ReverseFeeder(feeder, indexer));
     // controller
     //     .povDown()
     //     .onTrue(
@@ -420,19 +423,19 @@ public class RobotContainer {
     //             },
     //             intake));
     // 手动发射 (无自瞄，NT4 可调参数: Shooter/VelRps, Hood/AngleDeg)
-    // controller
-    //     .rightBumper()
-    //     .whileTrue(
-    //         new ManualShootCommand(
-    //                 this,
-    //                 () -> shooterVelRpsTunable.get(),
-    //                 () -> hoodAngleDegTunable.get(),
-    //                 () -> indexerUpVolts.get())
-    //             .andThen(new InstantCommand(() -> intake.setVoltage(7), intake)));
+    controller
+        .b()
+        .whileTrue(
+            new ManualShootCommand(
+                    this,
+                    () -> shooterVelRpsTunable.get(),
+                    () -> hoodAngleDegTunable.get(),
+                    () -> indexerUpVolts.get())
+                .andThen(new InstantCommand(() -> intake.setVoltage(7), intake)));
 
     // 射击指令 Autoaim 开关由仪表盘参数 Shooter/EnableAutoAim 控制，>0 时启用自动瞄准，否则手动瞄准
     controller
-        .rightTrigger()
+        .rightBumper()
         .whileTrue(
             Commands.either(
                 new MegaTrackIterativeCommand(this, false),
@@ -445,13 +448,16 @@ public class RobotContainer {
 
     // 强制 Manual射击
     controller
-        .rightBumper()
+        .rightTrigger()
         .whileTrue(
-            new ManualShootCommand(
-                this,
-                () -> shooterVelRpsTunable.get(),
-                () -> hoodAngleDegTunable.get(),
-                () -> indexerUpVolts.get()));
+            Commands.either(
+                new MegaTrackIterativeCommand(this, true),
+                new ManualShootCommand(
+                    this,
+                    () -> shooterVelRpsTunable.get(),
+                    () -> hoodAngleDegTunable.get(),
+                    () -> indexerUpVolts.get()),
+                () -> enableAutoAimTunable.get() > 0));
     // POV Up → 触发内部状态机序列: 切换到 UP_DEPLOY_STEP1 进行延时
     controller
         .povUp()
