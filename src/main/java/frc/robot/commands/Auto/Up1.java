@@ -19,13 +19,12 @@ import frc.robot.commands.SmashTrenchCommand;
 import frc.robot.subsystems.hopper.Hopper.HopperTargetState;
 import frc.robot.subsystems.intake.Intake;
 
-public class Down extends SequentialCommandGroup {
+public class Up1 extends SequentialCommandGroup {
 
-  public Down(RobotContainer robotContainer) {
-    PathPlannerPath Down1, Down2;
+  public Up1(RobotContainer robotContainer) {
+    PathPlannerPath up1Path;
     try {
-      Down1 = PathPlannerPath.fromChoreoTrajectory("Down1");
-      Down2 = PathPlannerPath.fromChoreoTrajectory("Down2");
+      up1Path = PathPlannerPath.fromChoreoTrajectory("Up1");
 
       addCommands(
           new InstantCommand(() -> robotContainer.intake.setWantedState(Intake.WantedState.INIT)));
@@ -44,7 +43,7 @@ public class Down extends SequentialCommandGroup {
       addCommands(
           new InstantCommand(
               () -> robotContainer.hopper.setTargetState(HopperTargetState.UP_DEPLOY_STEP1)));
-      addCommands(AutoBuilder.followPath(Down1));
+      addCommands(AutoBuilder.followPath(up1Path));
       addCommands(new MegaTrackIterativeCommand(robotContainer, false).withTimeout(10));
       // addCommands(new SmashTrenchCommand(robotContainer).withTimeout(3.2));
       // addCommands(
@@ -59,7 +58,7 @@ public class Down extends SequentialCommandGroup {
   }
 
   public static Pose2d getStartPose(Alliance alliance) {
-    Pose2d bluePose2d = new Pose2d(3.45, 0.68, new Rotation2d(Degrees.of(90)));
+    Pose2d bluePose2d = new Pose2d(4.59, 0.51, new Rotation2d(Degrees.of(0)));
     if (alliance == Alliance.Blue) return bluePose2d;
     else return bluePose2d.rotateAround(FieldConstants.FIELD_CENTER, Rotation2d.k180deg);
   }

@@ -698,16 +698,16 @@ public final class Constants {
       hoodAngleMap.put(3.853, 11.0);
       hoodAngleMap.put(4.375, 15.0);
 
-      shooterSpeedMap.put(1.188, 22.0);
-      shooterSpeedMap.put(1.508, 24.0);
-      shooterSpeedMap.put(1.800, 23.0);
-      shooterSpeedMap.put(2.138, 23.5);
-      shooterSpeedMap.put(2.419, 24.5);
-      shooterSpeedMap.put(2.717, 24.5);
-      shooterSpeedMap.put(3.011, 25.3);
-      shooterSpeedMap.put(3.415, 26.5);
-      shooterSpeedMap.put(3.853, 28.0);
-      shooterSpeedMap.put(4.375, 29.5);
+      shooterSpeedMap.put(1.188, 23.0);
+      shooterSpeedMap.put(1.508, 25.0);
+      shooterSpeedMap.put(1.800, 24.0);
+      shooterSpeedMap.put(2.138, 24.5);
+      shooterSpeedMap.put(2.419, 25.5);
+      shooterSpeedMap.put(2.717, 25.5);
+      shooterSpeedMap.put(3.011, 26.3);
+      shooterSpeedMap.put(3.415, 27.5);
+      shooterSpeedMap.put(3.853, 29.0);
+      shooterSpeedMap.put(4.375, 30.5);
 
       flightTimeMap.put(1.405, 0.9);
       flightTimeMap.put(2.031, 0.95);

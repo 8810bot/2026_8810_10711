@@ -30,10 +30,10 @@ import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 import frc.robot.Constants.FieldConstants;
 import frc.robot.commands.Auto.Down;
 import frc.robot.commands.Auto.DownMagic;
+import frc.robot.commands.Auto.Up1;
 import frc.robot.commands.Auto.UpOut;
 import frc.robot.commands.AutonTrench;
 import frc.robot.commands.DefaultFeederCommand;
-import frc.robot.commands.DefaultIndexerCommand;
 import frc.robot.commands.DriveCommands;
 import frc.robot.commands.LEDDefaultCommand;
 import frc.robot.commands.ManualShootCommand;
@@ -215,6 +215,7 @@ public class RobotContainer {
 
     // Set up SysId routines
     autoChooser.addOption("Up", new UpOut(this).withTimeout(20.5));
+    autoChooser.addOption("LEFT1", new Up1(this).withTimeout(20.5));
     autoChooser.addOption("Magic", new DownMagic(this).withTimeout(20.5));
 
     autoChooser.addOption("Down", new Down(this).withTimeout(20.5));
@@ -240,7 +241,7 @@ public class RobotContainer {
     // Default commands
     led.setDefaultCommand(new LEDDefaultCommand(this));
     feeder.setDefaultCommand(new DefaultFeederCommand(feeder));
-    indexer.setDefaultCommand(new DefaultIndexerCommand(indexer));
+    // indexer.setDefaultCommand(new DefaultIndexerCommand(indexer));
   }
 
   // IndexerUp：仪表盘实时调节电压
@@ -304,9 +305,13 @@ public class RobotContainer {
     controller
         .leftBumper()
         .onTrue(new InstantCommand(() -> intake.setWantedState(Intake.WantedState.DOWN_INTAKE)));
+
+    controller.leftBumper().whileTrue(new InstantCommand(() -> indexer.setUpVoltage(-3), indexer));
     controller
         .leftBumper()
-        .onFalse(new InstantCommand(() -> intake.setWantedState(Intake.WantedState.DOWN_IDLE)));
+        .onFalse(
+            new InstantCommand(() -> intake.setWantedState(Intake.WantedState.DOWN_IDLE))
+                .alongWith(new InstantCommand(() -> indexer.setUpVoltage(0), indexer)));
 
     // X 键：按住收回 Intake 到抬升位置
     controller
@@ -345,7 +350,7 @@ public class RobotContainer {
             Commands.runOnce(
                     () -> {
                       if (DriverStation.isDisabled()) {
-                        if (autoChooser.getSendableChooser().getSelected() == "Up") {
+                        if (autoChooser.getSendableChooser().getSelected() == "LEFT1") {
                           drive.setPose(UpOut.getStartPose(DriverStation.getAlliance().get()));
                         } else {
                           drive.setPose(DownMagic.getStartPose(DriverStation.getAlliance().get()));
@@ -484,6 +489,8 @@ public class RobotContainer {
   /** Called automatically when the robot is enabled (in Auto or Teleop). */
   public void onEnable() {
     // 自动将当前位置作为 Hood 的零点 (0度)
-    // hood.zeroPosition();
+    // intake.setWantedState(Intake.WantedState.INIT);
+
+    hood.zeroPosition();
   }
 }

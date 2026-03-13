@@ -39,7 +39,7 @@ public class DownMagic extends SequentialCommandGroup {
   }
 
   public static Pose2d getStartPose(Alliance alliance) {
-    Pose2d bluePose2d = new Pose2d(4.59, 0.51, new Rotation2d(Degrees.of(90)));
+    Pose2d bluePose2d = new Pose2d(3.45, 0.68, new Rotation2d(Degrees.of(0)));
     if (alliance == Alliance.Blue) return bluePose2d;
     else return bluePose2d.rotateAround(FieldConstants.FIELD_CENTER, Rotation2d.k180deg);
   }

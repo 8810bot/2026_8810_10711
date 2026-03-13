@@ -1,5 +1,6 @@
 package frc.robot.commands;
 
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import frc.robot.Constants.MegaTrackIterativeCommandConstants;
 import frc.robot.RobotContainer;
@@ -74,7 +75,7 @@ public class ManualShootCommand extends Command {
     // 计算误差
     double flywheelErr = shooterRps - robot.shooter.getFlywheelVelocityRps();
     double hoodErr = hoodDeg - robot.hood.getAngleDeg();
-
+    SmartDashboard.putBoolean("SHOOTING?", shooting);
     // 门控：进入/退出 shooting 状态 (滞回)
     if (!shooting) {
       if (Math.abs(flywheelErr) <= ENTER_FLYWHEEL_TOL && Math.abs(hoodErr) <= ENTER_HOOD_TOL) {
