@@ -66,14 +66,10 @@ public class Hopper extends SubsystemBase {
     double enterShrink = HopperConstants.TRENCH_HYSTERESIS_ENTER_MARGIN;
     double exitExpand = HopperConstants.TRENCH_HYSTERESIS_EXIT_MARGIN;
     for (double[] zone : HopperConstants.TRENCH_DANGER_ZONES) {
-      double xMin =
-          trenchSafetyActive ? zone[0] - exitExpand : zone[0] + enterShrink;
-      double xMax =
-          trenchSafetyActive ? zone[1] + exitExpand : zone[1] - enterShrink;
-      double yMin =
-          trenchSafetyActive ? zone[2] - exitExpand : zone[2] + enterShrink;
-      double yMax =
-          trenchSafetyActive ? zone[3] + exitExpand : zone[3] - enterShrink;
+      double xMin = trenchSafetyActive ? zone[0] - exitExpand : zone[0] + enterShrink;
+      double xMax = trenchSafetyActive ? zone[1] + exitExpand : zone[1] - enterShrink;
+      double yMin = trenchSafetyActive ? zone[2] - exitExpand : zone[2] + enterShrink;
+      double yMax = trenchSafetyActive ? zone[3] + exitExpand : zone[3] - enterShrink;
       if (rx >= xMin && rx <= xMax && ry >= yMin && ry <= yMax) {
         nowInDanger = true;
         break;
@@ -139,8 +135,8 @@ public class Hopper extends SubsystemBase {
   /**
    * 设置手动安全覆盖。
    *
-   * <p>置 true 时，战壕安全互锁暂停：periodic() 不强制收拢，setTargetState() 不拦截展开请求。
-   * 按键松开后应立即调用 setSafetyOverride(false) 恢复保护。
+   * <p>置 true 时，战壕安全互锁暂停：periodic() 不强制收拢，setTargetState() 不拦截展开请求。 按键松开后应立即调用
+   * setSafetyOverride(false) 恢复保护。
    */
   public void setSafetyOverride(boolean override) {
     safetyOverrideActive = override;

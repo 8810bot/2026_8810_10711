@@ -33,8 +33,7 @@ public final class HopperConstants {
   /**
    * 4 个战壕区域的 AABB（Axis-Aligned Bounding Box）定义。
    *
-   * <p>每个条目为 {xMin, xMax, yMin, yMax}，均为場地绝对坐标（米）。
-   * 同时适用于红蓝两方，无需区分联盟。
+   * <p>每个条目为 {xMin, xMax, yMin, yMax}，均为場地绝对坐标（米）。 同时适用于红蓝两方，无需区分联盟。
    *
    * <pre>
    * 区域       X 范围         Y 范围
@@ -56,7 +55,7 @@ public final class HopperConstants {
    *
    * <p>进入临界 = 边界 + HYSTERESIS_ENTER_MARGIN （円内）
    */
-  public static final double TRENCH_HYSTERESIS_ENTER_MARGIN = 0.10;
+  public static final double TRENCH_HYSTERESIS_ENTER_MARGIN = 0.0;
 
   /**
    * 离开危险区的边界向外扩展量（m）。
