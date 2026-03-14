@@ -15,7 +15,6 @@ import frc.robot.Constants.FieldConstants;
 import frc.robot.RobotContainer;
 import frc.robot.commands.MegaTrackIterativeCommand;
 import frc.robot.commands.ReverseFeeder;
-import frc.robot.commands.SmashTrenchCommand;
 import frc.robot.subsystems.hopper.Hopper.HopperTargetState;
 import frc.robot.subsystems.intake.Intake;
 
@@ -23,8 +22,10 @@ public class Up1 extends SequentialCommandGroup {
 
   public Up1(RobotContainer robotContainer) {
     PathPlannerPath up1Path;
+    PathPlannerPath TrenchPath;
     try {
       up1Path = PathPlannerPath.fromChoreoTrajectory("Up1");
+      TrenchPath = PathPlannerPath.fromChoreoTrajectory("LeftTrenchInit");
 
       addCommands(
           new InstantCommand(() -> robotContainer.intake.setWantedState(Intake.WantedState.INIT)));
@@ -39,7 +40,7 @@ public class Up1 extends SequentialCommandGroup {
           new InstantCommand(
               () -> robotContainer.hopper.setTargetState(HopperTargetState.DOWN_STOW_STEP1)));
       addCommands(new WaitCommand(0.5));
-      addCommands(new SmashTrenchCommand(robotContainer).withTimeout(3.2));
+      addCommands(AutoBuilder.followPath(TrenchPath));
       addCommands(
           new InstantCommand(
               () -> robotContainer.hopper.setTargetState(HopperTargetState.UP_DEPLOY_STEP1)));

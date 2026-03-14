@@ -3,7 +3,6 @@ package frc.robot.commands.Auto;
 import static edu.wpi.first.units.Units.Degrees;
 
 import com.pathplanner.lib.auto.AutoBuilder;
-import com.pathplanner.lib.path.EventMarker;
 import com.pathplanner.lib.path.PathPlannerPath;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
@@ -16,7 +15,6 @@ import frc.robot.Constants.FieldConstants;
 import frc.robot.RobotContainer;
 import frc.robot.commands.MegaTrackIterativeCommand;
 import frc.robot.commands.ReverseFeeder;
-import frc.robot.commands.SmashTrenchCommand;
 import frc.robot.subsystems.hopper.Hopper.HopperTargetState;
 import frc.robot.subsystems.intake.Intake;
 
@@ -28,7 +26,6 @@ public class LeftSpinBack extends SequentialCommandGroup {
     try {
       TrenchPath = PathPlannerPath.fromChoreoTrajectory("LeftTrenchInit");
       Route = PathPlannerPath.fromChoreoTrajectory("Leftv2");
-      Route.getEventMarkers();
       addCommands(
           new InstantCommand(() -> robotContainer.intake.setWantedState(Intake.WantedState.INIT)));
 
