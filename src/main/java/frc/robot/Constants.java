@@ -687,21 +687,27 @@ public final class Constants {
 
     static {
       // Updated from shootmap.md (鐠烘繄顬? 鐏忓嫭澧滈柅鐔峰, hood鐟欐帒瀹? 妞嬬偠顢戦弮鍫曟？)
-      hoodAngleMap.put(1.405, 0.9);
-      hoodAngleMap.put(2.031, 2.1);
-      hoodAngleMap.put(2.725, 4.7);
-      hoodAngleMap.put(3.271, 7.5);
-      hoodAngleMap.put(3.705, 11.5);
-      hoodAngleMap.put(4.279, 13.);
-      hoodAngleMap.put(4.776, 17.7);
+      hoodAngleMap.put(1.188, 0.0);
+      hoodAngleMap.put(1.508, 0.0);
+      hoodAngleMap.put(1.800, 5.0);
+      hoodAngleMap.put(2.138, 6.00);
+      hoodAngleMap.put(2.419, 7.5);
+      hoodAngleMap.put(2.717, 8.00);
+      hoodAngleMap.put(3.011, 8.60);
+      hoodAngleMap.put(3.415, 9.50);
+      hoodAngleMap.put(3.853, 11.0);
+      hoodAngleMap.put(4.375, 15.0);
 
-      shooterSpeedMap.put(1.405, 22.3);
-      shooterSpeedMap.put(2.031, 23.1);
-      shooterSpeedMap.put(2.725, 25.);
-      shooterSpeedMap.put(3.271, 27.2);
-      shooterSpeedMap.put(3.705, 28.);
-      shooterSpeedMap.put(4.279, 29.1);
-      shooterSpeedMap.put(4.776, 30.3);
+      shooterSpeedMap.put(1.188, 23.5);
+      shooterSpeedMap.put(1.508, 25.5);
+      shooterSpeedMap.put(1.800, 24.5);
+      shooterSpeedMap.put(2.138, 25.0);
+      shooterSpeedMap.put(2.419, 26.0);
+      shooterSpeedMap.put(2.717, 26.0);
+      shooterSpeedMap.put(3.011, 26.8);
+      shooterSpeedMap.put(3.415, 28.0);
+      shooterSpeedMap.put(3.853, 29.5);
+      shooterSpeedMap.put(4.375, 31.0);
 
       flightTimeMap.put(1.405, 0.9);
       flightTimeMap.put(2.031, 0.95);

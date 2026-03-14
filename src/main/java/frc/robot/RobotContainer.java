@@ -30,6 +30,7 @@ import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 import frc.robot.Constants.FieldConstants;
 import frc.robot.commands.Auto.Down;
 import frc.robot.commands.Auto.DownMagic;
+import frc.robot.commands.Auto.LeftSpinBack;
 import frc.robot.commands.Auto.Up1;
 import frc.robot.commands.Auto.UpOut;
 import frc.robot.commands.AutonTrench;
@@ -216,6 +217,7 @@ public class RobotContainer {
     // Set up SysId routines
     autoChooser.addOption("Up", new UpOut(this).withTimeout(20.5));
     autoChooser.addOption("LEFT1", new Up1(this).withTimeout(20.5));
+    autoChooser.addOption("LeftSpinBack", new LeftSpinBack(this).withTimeout(20.5));
     autoChooser.addOption("Magic", new DownMagic(this).withTimeout(20.5));
 
     autoChooser.addOption("Down", new Down(this).withTimeout(20.5));

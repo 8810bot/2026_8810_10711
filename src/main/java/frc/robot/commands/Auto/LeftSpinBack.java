@@ -3,6 +3,7 @@ package frc.robot.commands.Auto;
 import static edu.wpi.first.units.Units.Degrees;
 
 import com.pathplanner.lib.auto.AutoBuilder;
+import com.pathplanner.lib.path.EventMarker;
 import com.pathplanner.lib.path.PathPlannerPath;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
@@ -16,16 +17,18 @@ import frc.robot.RobotContainer;
 import frc.robot.commands.MegaTrackIterativeCommand;
 import frc.robot.commands.ReverseFeeder;
 import frc.robot.commands.SmashTrenchCommand;
+import frc.robot.subsystems.hopper.Hopper.HopperTargetState;
 import frc.robot.subsystems.intake.Intake;
 
-public class Down extends SequentialCommandGroup {
+public class LeftSpinBack extends SequentialCommandGroup {
 
-  public Down(RobotContainer robotContainer) {
-    PathPlannerPath Down1, Down2;
+  public LeftSpinBack(RobotContainer robotContainer) {
+    PathPlannerPath Route;
+    PathPlannerPath TrenchPath;
     try {
-      Down1 = PathPlannerPath.fromChoreoTrajectory("Down1");
-      Down2 = PathPlannerPath.fromChoreoTrajectory("Down2");
-
+      TrenchPath = PathPlannerPath.fromChoreoTrajectory("LeftTrenchInit");
+      Route = PathPlannerPath.fromChoreoTrajectory("Leftv2");
+      Route.getEventMarkers();
       addCommands(
           new InstantCommand(() -> robotContainer.intake.setWantedState(Intake.WantedState.INIT)));
 
@@ -35,15 +38,15 @@ public class Down extends SequentialCommandGroup {
       addCommands(
           new InstantCommand(
               () -> robotContainer.intake.setWantedState(Intake.WantedState.DOWN_INTAKE)));
-      // addCommands(
-      //     new InstantCommand(
-      //         () -> robotContainer.hopper.setTargetState(HopperTargetState.DOWN_STOW_STEP1)));
+      addCommands(
+          new InstantCommand(
+              () -> robotContainer.hopper.setTargetState(HopperTargetState.DOWN_STOW_STEP1)));
       addCommands(new WaitCommand(0.5));
-      addCommands(new SmashTrenchCommand(robotContainer).withTimeout(3.2));
-      // addCommands(
-      //     new InstantCommand(
-      //         () -> robotContainer.hopper.setTargetState(HopperTargetState.UP_DEPLOY_STEP1)));
-      addCommands(AutoBuilder.followPath(Down1));
+      addCommands(AutoBuilder.followPath(TrenchPath));
+      addCommands(
+          new InstantCommand(
+              () -> robotContainer.hopper.setTargetState(HopperTargetState.UP_DEPLOY_STEP1)));
+      addCommands(AutoBuilder.followPath(Route));
       addCommands(new MegaTrackIterativeCommand(robotContainer, false).withTimeout(10));
       // addCommands(new SmashTrenchCommand(robotContainer).withTimeout(3.2));
       // addCommands(
@@ -58,7 +61,7 @@ public class Down extends SequentialCommandGroup {
   }
 
   public static Pose2d getStartPose(Alliance alliance) {
-    Pose2d bluePose2d = new Pose2d(3.45, 0.68, new Rotation2d(Degrees.of(90)));
+    Pose2d bluePose2d = new Pose2d(4.59, 0.51, new Rotation2d(Degrees.of(0)));
     if (alliance == Alliance.Blue) return bluePose2d;
     else return bluePose2d.rotateAround(FieldConstants.FIELD_CENTER, Rotation2d.k180deg);
   }
