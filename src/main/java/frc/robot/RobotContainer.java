@@ -32,14 +32,13 @@ import frc.robot.commands.Auto.Down;
 import frc.robot.commands.Auto.DownMagic;
 import frc.robot.commands.Auto.Up1;
 import frc.robot.commands.Auto.UpOut;
-import frc.robot.commands.AutonTrench;
 import frc.robot.commands.DefaultFeederCommand;
 import frc.robot.commands.DriveCommands;
 import frc.robot.commands.LEDDefaultCommand;
 import frc.robot.commands.ManualShootCommand;
 import frc.robot.commands.MegaTrackIterativeCommand;
-import frc.robot.commands.ReverseFeeder;
 import frc.robot.commands.SmashBumpCommand;
+import frc.robot.commands.SmashTrenchCommand;
 import frc.robot.generated.TunerConstants;
 import frc.robot.subsystems.drive.Drive;
 import frc.robot.subsystems.drive.GyroIO;
@@ -53,6 +52,7 @@ import frc.robot.subsystems.feeder.FeederIOTalonFX;
 import frc.robot.subsystems.hood.Hood;
 import frc.robot.subsystems.hood.HoodIO;
 import frc.robot.subsystems.hood.HoodIOTalonFX;
+import frc.robot.constants.IndexerConstants;
 import frc.robot.subsystems.hopper.Hopper;
 import frc.robot.subsystems.hopper.HopperIO;
 import frc.robot.subsystems.hopper.HopperIOReal;
@@ -84,7 +84,7 @@ public class RobotContainer {
   private LoggedTunableNumber hoodAngleDegTunable = new LoggedTunableNumber("Hood/AngleDeg", 10);
   private LoggedTunableNumber shooterVelRpsTunable = new LoggedTunableNumber("Shooter/VelRps", 22);
   private LoggedTunableNumber enableAutoAimTunable =
-      new LoggedTunableNumber("Shooter/EnableAutoAim", 1);
+      new LoggedTunableNumber("Shooter/EnableAutoAim", 0);
 
   // ---- IndexerUp 独立电压控制 ----
   /** 仪表盘实时调节 IndexerUp 电压 (volts) */
@@ -167,7 +167,7 @@ public class RobotContainer {
         hood = new Hood(new HoodIOTalonFX());
         feeder = new Feeder(new FeederIOTalonFX());
         intake = new Intake(new IntakeIOTalonFX());
-        hopper = new Hopper(new HopperIOReal());
+        hopper = new Hopper(new HopperIOReal(), drive::getPose);
         indexer = new Indexer(new IndexerIOTalonFX());
         // 暂时禁用真实 CANdle 消除报错: led = new LED(new LEDIOCANdle());
         led = new LED(new LEDIO() {});
@@ -187,7 +187,7 @@ public class RobotContainer {
         feeder = new Feeder(new FeederIO() {});
         intake = new Intake(new IntakeIO() {});
         indexer = new Indexer(new IndexerIO() {});
-        hopper = new Hopper(new HopperIO() {});
+        hopper = new Hopper(new HopperIO() {}, drive::getPose);
         led = new LED(new LEDIO() {});
         break;
 
@@ -205,7 +205,7 @@ public class RobotContainer {
         feeder = new Feeder(new FeederIO() {});
         intake = new Intake(new IntakeIO() {});
         indexer = new Indexer(new IndexerIO() {});
-        hopper = new Hopper(new HopperIO() {});
+        hopper = new Hopper(new HopperIO() {}, drive::getPose);
         led = new LED(new LEDIO() {});
         break;
     }
@@ -277,20 +277,8 @@ public class RobotContainer {
     //             drive));
 
     // Debug: log nearest trench pre-align pose
-
-    // 自动对准Trench，右摇杆按住时进入，松开时退出
-    controller.rightStick().whileTrue(new AutonTrench(drive, () -> controller.getLeftY()));
-    controller
-        .rightStick()
-        .onTrue(
-            new InstantCommand(
-                () -> hopper.setTargetState(Hopper.HopperTargetState.DOWN_STOW_STEP1)));
-    controller
-        .rightStick()
-        .onFalse(
-            new InstantCommand(
-                () -> hopper.setTargetState(Hopper.HopperTargetState.UP_DEPLOY_STEP1)));
-    controller.leftStick().whileTrue(new SmashBumpCommand(this));
+    controller.rightStick().whileTrue(new SmashBumpCommand(this));
+    controller.leftStick().whileTrue(new SmashTrenchCommand(this));
 
     // Manual tuning buttons
     // controller
@@ -301,7 +289,7 @@ public class RobotContainer {
     // Switch to X pattern when X button is pressed
     // controller.x().onTrue(Commands.runOnce(drive::stopWithX, drive));
 
-    // LB 键：按下开吸球，松开停吸球 (保持在下面)
+    // LB 键：按下开吸球并让 IndexerUp 反转，松开停止
     controller
         .leftBumper()
         .onTrue(new InstantCommand(() -> intake.setWantedState(Intake.WantedState.DOWN_INTAKE)));
@@ -320,8 +308,6 @@ public class RobotContainer {
     controller
         .x()
         .onFalse(new InstantCommand(() -> intake.setWantedState(Intake.WantedState.DOWN_IDLE)));
-
-    controller.a().whileTrue(new ReverseFeeder(feeder, indexer));
     // controller
     //     .povDown()
     //     .onTrue(
@@ -387,9 +373,9 @@ public class RobotContainer {
     //               .alongWith(new InstantCommand(() -> this.m_channel5.setPowered(true)))
     //               .alongWith(new InstantCommand(() -> this.m_channel5.setEnabled(true))));
     // }
-    // controller
-    //     .a()
-    //     .onTrue(new InstantCommand(() -> intake.setWantedState(Intake.WantedState.UP_DEBUG)));
+    controller
+        .a()
+        .onTrue(new InstantCommand(() -> intake.setWantedState(Intake.WantedState.UP_DEBUG)));
 
     // controller
     //     .leftBumper()
@@ -413,32 +399,35 @@ public class RobotContainer {
     //             intake,
     //             feeder,
     //             indexer));
-    // controller
-    //     .rightTrigger()
-    //     .whileTrue(
-    //         Commands.run(
-    //             () -> {
-    //               intake.setWantedState(Intake.WantedState.FLICK_BACK);
-    //             },
-    //             intake))
-    //     .onFalse(
-    //         Commands.runOnce(
-    //             () -> {
-    //               intake.setWantedState(Intake.WantedState.DOWN_IDLE);
-    //             },
-    //             intake));
-    // 手动发射 (无自瞄，NT4 可调参数: Shooter/VelRps, Hood/AngleDeg)
     controller
-        .b()
+        .rightTrigger()
         .whileTrue(
-            new ManualShootCommand(
-                    this,
-                    () -> shooterVelRpsTunable.get(),
-                    () -> hoodAngleDegTunable.get(),
-                    () -> indexerUpVolts.get())
-                .andThen(new InstantCommand(() -> intake.setVoltage(7), intake)));
+            Commands.run(
+                () -> {
+                  intake.setWantedState(Intake.WantedState.FLICK_BACK);
+                  indexer.setUpVoltage(IndexerConstants.INDEXER_UP_INTAKE_REVERSE_VOLTS);
+                },
+                intake,
+                indexer))
+        .onFalse(
+            Commands.runOnce(
+                () -> {
+                  intake.setWantedState(Intake.WantedState.UP_STOW_STOP);
+                  indexer.setUpVoltage(0.0);
+                },
+                intake,
+                indexer));
+    // 手动发射 (无自瞄，NT4 可调参数: Shooter/VelRps, Hood/AngleDeg)
+    // controller
+    //     .rightBumper()
+    //     .whileTrue(
+    //         new ManualShootCommand(
+    //                 this,
+    //                 () -> shooterVelRpsTunable.get(),
+    //                 () -> hoodAngleDegTunable.get(),
+    //                 () -> indexerUpVolts.get())
+    //             .andThen(new InstantCommand(() -> intake.setVoltage(7), intake)));
 
-    // 射击指令 Autoaim 开关由仪表盘参数 Shooter/EnableAutoAim 控制，>0 时启用自动瞄准，否则手动瞄准
     controller
         .rightBumper()
         .whileTrue(
@@ -450,25 +439,17 @@ public class RobotContainer {
                     () -> hoodAngleDegTunable.get(),
                     () -> indexerUpVolts.get()),
                 () -> enableAutoAimTunable.get() > 0));
-
-    // 强制 Manual射击
-    controller
-        .rightTrigger()
-        .whileTrue(
-            Commands.either(
-                new MegaTrackIterativeCommand(this, true),
-                new ManualShootCommand(
-                    this,
-                    () -> shooterVelRpsTunable.get(),
-                    () -> hoodAngleDegTunable.get(),
-                    () -> indexerUpVolts.get()),
-                () -> enableAutoAimTunable.get() > 0));
-    // POV Up → 触发内部状态机序列: 切换到 UP_DEPLOY_STEP1 进行延时
+    // POV Up → 触发内部状态机序列: 切换到 UP_DEPLOY_STEP1 进行延时（受安全门禁保护）
     controller
         .povUp()
         .onTrue(
             new InstantCommand(
                 () -> hopper.setTargetState(Hopper.HopperTargetState.UP_DEPLOY_STEP1), hopper));
+    // B 键（空闲）→ 专用安全覆盖锁：按住时暂停战壕互锁，松开后立即恢复保护
+    // 使用方法：先按住 B 键再按 POV UP → 可在战壕内强制展开 Hopper
+    controller
+        .b()
+        .whileTrue(Commands.startEnd(() -> hopper.setSafetyOverride(true), () -> hopper.setSafetyOverride(false), hopper));
     // POV Down → 触发内部状态机序列: 切换到 DOWN_STOW_STEP1 进行延时
     controller
         .povDown()

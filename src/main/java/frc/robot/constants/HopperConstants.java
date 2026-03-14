@@ -29,5 +29,41 @@ public final class HopperConstants {
   /** Debounce time (sec) for declaring hopper full / not full. */
   public static final double FULL_DEBOUNCE_SEC = 0.10;
 
+  // ---- 战壕危险区域 (Trench Danger Zones) ----
+  /**
+   * 4 个战壕区域的 AABB（Axis-Aligned Bounding Box）定义。
+   *
+   * <p>每个条目为 {xMin, xMax, yMin, yMax}，均为場地绝对坐标（米）。
+   * 同时适用于红蓝两方，无需区分联盟。
+   *
+   * <pre>
+   * 区域       X 范围         Y 范围
+   * 蓝队下方   4.05 ~ 5.15   0.00 ~ 1.25
+   * 蓝队上方   4.05 ~ 5.15   6.80 ~ 8.05
+   * 红队上方  11.35 ~ 12.50  6.80 ~ 8.05
+   * 红队下方  11.35 ~ 12.50  0.00 ~ 1.25
+   * </pre>
+   */
+  public static final double[][] TRENCH_DANGER_ZONES = {
+    {4.05, 5.15, 0.00, 1.25}, // 蓝队下方
+    {4.05, 5.15, 6.80, 8.05}, // 蓝队上方
+    {11.35, 12.50, 6.80, 8.05}, // 红队上方
+    {11.35, 12.50, 0.00, 1.25}, // 红队下方
+  };
+
+  /**
+   * 进入危险区的边界向内缩紧量（m）。
+   *
+   * <p>进入临界 = 边界 + HYSTERESIS_ENTER_MARGIN （円内）
+   */
+  public static final double TRENCH_HYSTERESIS_ENTER_MARGIN = 0.10;
+
+  /**
+   * 离开危险区的边界向外扩展量（m）。
+   *
+   * <p>退出临界 = 边界 - HYSTERESIS_EXIT_MARGIN （圆外）
+   */
+  public static final double TRENCH_HYSTERESIS_EXIT_MARGIN = 0.10;
+
   private HopperConstants() {}
 }
