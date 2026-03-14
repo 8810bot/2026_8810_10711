@@ -1,6 +1,6 @@
 package frc.robot.commands;
 
-import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
+import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj2.command.Command;
 import frc.robot.Constants.MegaTrackIterativeCommandConstants;
 import frc.robot.RobotContainer;
@@ -37,6 +37,8 @@ public class ManualShootCommand extends Command {
       MegaTrackIterativeCommandConstants.ENTER_HOOD_DEG_TOL;
   private static final double EXIT_HOOD_TOL = MegaTrackIterativeCommandConstants.EXIT_HOOD_DEG_TOL;
 
+  private double start_time;
+
   private boolean shooting = false;
 
   /**
@@ -60,6 +62,7 @@ public class ManualShootCommand extends Command {
   @Override
   public void initialize() {
     shooting = false;
+    start_time = Timer.getFPGATimestamp();
     robot.intake.setWantedState(WantedState.UP_STOW_STOP);
   }
 
@@ -75,10 +78,10 @@ public class ManualShootCommand extends Command {
     // 计算误差
     double flywheelErr = shooterRps - robot.shooter.getFlywheelVelocityRps();
     double hoodErr = hoodDeg - robot.hood.getAngleDeg();
-    SmartDashboard.putBoolean("SHOOTING?", shooting);
     // 门控：进入/退出 shooting 状态 (滞回)
     if (!shooting) {
-      if (Math.abs(flywheelErr) <= ENTER_FLYWHEEL_TOL && Math.abs(hoodErr) <= ENTER_HOOD_TOL) {
+      if (Math.abs(flywheelErr) <= ENTER_FLYWHEEL_TOL && Math.abs(hoodErr) <= ENTER_HOOD_TOL
+          || Timer.getFPGATimestamp() - start_time > 2.0) {
         shooting = true;
       }
     } else {
